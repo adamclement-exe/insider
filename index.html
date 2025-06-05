@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Access Protocol</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace; background-color: #1a1a1a; /* Darker background for fireworks */
+            color: #eee; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; /* Usually good to keep hidden */
+        }
+        .level-title { color: #0f0; margin-bottom: 20px; text-align: center; }
+        #level1-content, #level2-content, #level3-content, #level4-content, #level5-content, #game-complete-content {
+            width: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .scene { display: flex; align-items: flex-end; gap: 50px; margin-top: 10px; }
+
+        /* Door CSS */
+        .door-frame { width: 170px; height: 320px; background-color: #503020; padding: 15px; border-radius: 5px 5px 0 0; box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.2); perspective: 1000px; }
+        .door { width: 100%; height: 100%; background-color: #8B4513; border: 2px solid #654321; position: relative; transform-origin: left center; transition: transform 0.8s ease-in-out; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2), inset -2px -2px 5px rgba(255,255,255,0.1); }
+        .door.open { transform: rotateY(-110deg); }
+        .door-handle { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; background-color: #c0c0c0; border-radius: 50%; box-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+
+        /* Keypad CSS */
+        .keypad-area { display: flex; flex-direction: column; align-items: center; background-color: #4a4a4a; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        #keypad-display { width: 100%; height: 40px; background-color: #222; color: #0f0; border: 2px solid #555; border-radius: 5px; margin-bottom: 15px; font-size: 1.8em; text-align: center; letter-spacing: 2px; padding: 5px; box-sizing: border-box; user-select: none; }
+        .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .keypad-grid button { width: 60px; height: 60px; background-color: #666; color: white; border: 1px solid #888; border-radius: 8px; font-size: 1.5em; cursor: pointer; transition: background-color 0.2s, transform 0.1s; user-select: none; }
+        .keypad-grid button:hover { background-color: #777; }
+        .keypad-grid button:active { background-color: #555; transform: scale(0.95); }
+
+        /* Popup CSS */
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .popup-overlay.visible { display: flex; }
+        .popup-window { background-color: #2c2c2c; border: 2px solid #0a0; padding: 20px; border-radius: 8px; box-shadow: 0 0 25px rgba(0, 200, 0, 0.3); width: 80%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; }
+        .popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; color: #0f0; font-size: 1.2em; }
+        .popup-header h2 { margin: 0; }
+        #close-popup { background: none; border: 1px solid #0f0; color: #0f0; font-size: 1.2em; cursor: pointer; padding: 5px 10px; border-radius: 3px; }
+        #close-popup:hover { background-color: #0f0; color: #2c2c2c; }
+        .popup-content { background-color: #1a1a1a; border: 1px solid #444; padding: 15px; overflow-y: auto; flex-grow: 1; }
+        .popup-content pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; color: #ccc; }
+
+        /* Level 2-4 Common PDF Viewer CSS */
+        #level3-content #pdf-viewer-container-l3, #level4-content #pdf-viewer-container-l4 { width: 90%; max-width: 800px; height: 450px; margin: 15px auto; border: 2px solid #0f0; background-color: #111; }
+        #level3-content #pdf-viewer-container-l3 embed, #level3-content #pdf-viewer-container-l3 iframe,
+        #level4-content #pdf-viewer-container-l4 embed, #level4-content #pdf-viewer-container-l4 iframe { width: 100%; height: 100%; border: none; }
+
+        /* Level specific input areas and feedback */
+        .challenge-input-area { margin-top: 15px; text-align: center; }
+        .challenge-input-area label { display: block; margin-bottom: 10px; color: #0f0; }
+        .challenge-input-area input[type="text"], .challenge-input-area input[type="file"] {
+            padding: 10px; margin-right: 10px; border-radius: 5px; border: 1px solid #0f0;
+            background-color: #333; color: #0f0; font-family: 'Courier New', Courier, monospace;
+        }
+        .challenge-input-area input[type="text"] { width: 250px; }
+        .challenge-input-area button {
+            padding: 10px 15px; border-radius: 5px; border: 1px solid #0f0;
+            background-color: #0a0; color: #222; cursor: pointer;
+            font-family: 'Courier New', Courier, monospace; margin-top: 5px;
+        }
+        .challenge-input-area button:hover { background-color: #0c0; }
+        .challenge-input-area button:disabled { background-color: #555; cursor: not-allowed;}
+        .feedback-text { margin-top: 10px; color: #0f0; min-height: 1.2em; }
+
+
+        /* Level 2 CSS */
+        #level2-content { text-align: center; padding: 20px; color: #0f0; }
+        #level2-content h1, #level2-content h2 { color: #0f0; }
+        #level2-content img { max-width: 90%; max-height: 300px; height: auto; margin-bottom: 20px; border: 3px solid #0f0; border-radius: 5px; background-color: #111; }
+        #level2-content #map-container { height: 400px; width: 80%; max-width: 700px; margin: 20px auto; border: 2px solid #0f0; border-radius: 5px; }
+
+        /* Level 5 Specific Styles */
+        #level5-content .download-link {
+            display: inline-block; padding: 10px 20px; margin: 20px auto; background-color: #004400;
+            color: #0f0; border: 1px solid #0f0; text-decoration: none; border-radius: 5px;
+        }
+        #level5-content .download-link:hover { background-color: #006600; }
+        #level5-content #passport-input { width: 350px; } /* Wider for passport string */
+
+        /* Game Complete Screen & Fireworks */
+        #game-complete-content {
+            text-align: center; color: #0f0; position: relative; /* For positioning fireworks */
+            width: 100%; height: 100vh; /* Full viewport */
+            background-color: #111; /* Darker for fireworks */
+        }
+        #game-complete-content h1 { font-size: 3em; margin-top: 30vh; }
+        .firework {
+            position: absolute; width: 4px; height: 4px; background-color: white;
+            border-radius: 50%; opacity: 1;
+            animation: firework-burst 1s ease-out forwards;
+        }
+        @keyframes firework-burst {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(20) translate(var(--tx), var(--ty)); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="level1-content" style="display: none;">
+        <h1 class="level-title">Level 1: Interception & Encoding</h1>
+        <div class="scene"> <div class="door-frame"> <div class="door" id="the-door"> <div class="door-handle"></div> </div> </div> <div class="keypad-area"> <div id="keypad-display"></div> <div class="keypad-grid"> <button data-key="1">1</button> <button data-key="2">2</button> <button data-key="3">3</button> <button data-key="4">4</button> <button data-key="5">5</button> <button data-key="6">6</button> <button data-key="7">7</button> <button data-key="8">8</button> <button data-key="9">9</button> <button data-key="A">A</button> <button data-key="0">0</button> <button data-key="B">B</button> <button id="keypad-clear-button" style="grid-column: span 3;">CLR</button> </div> </div> </div>
+    </div>
+
+    <div id="level2-content" style="display: none;">
+        <h1 class="level-title">Level 2: Geo-Locate Asset</h1> <img src="base.jpg" alt="Intercepted Image - Potential Target" id="base-image"> <h2>Objective: Pinpoint Target Vicinity</h2> <p>The intercepted image points to a high-value asset. We need to confirm its general operating area.</p> <p>Use the map to find a location that matches our intelligence parameters (within a 10-mile radius of the suspected zone).</p> <div class="challenge-input-area"> <input type="text" id="map-search-input" placeholder="e.g., City, Town, Region"> <button id="map-search-button">Scan Area</button> </div> <div id="map-container"></div> <p id="map-feedback" class="feedback-text"></p>
+    </div>
+
+    <div id="level3-content" style="display: none;">
+        <h1 class="level-title">Level 3: Source Identification</h1> <h2>Objective: Identify the Document Originator</h2> <p>A heavily redacted document has been recovered. Analyze it carefully to determine its source.</p> <div id="pdf-viewer-container-l3"></div> <div class="challenge-input-area"> <label for="name-input">We need to find out who sent this letter, what is their full name?</label> <div> <input type="text" id="name-input" placeholder="Enter full name"> <button id="submit-name-button">Submit Name</button> </div> <p id="level3-feedback" class="feedback-text"></p> </div>
+    </div>
+
+    <div id="level4-content" style="display: none;">
+        <h1 class="level-title">Level 4: Visual Data Extraction</h1> <h2>Objective: Recover Specific Visual Asset</h2> <p>Intelligence suggests a critical image is embedded or referenced within the provided document "horse.pdf". Locate and extract this image.</p> <div id="pdf-viewer-container-l4"></div> <div class="challenge-input-area"> <label for="image-upload-input">Find the image of military vehicles in this PDF document and upload it:</label> <input type="file" id="image-upload-input" accept="image/*"> <button id="submit-image-button" disabled>Verify Image</button> <p id="level4-feedback" class="feedback-text"></p> </div>
+    </div>
+
+    <div id="level5-content" style="display: none;">
+        <h1 class="level-title">Level 5: Final Decryption</h1>
+        <h2>Objective: Extract Critical Operative Data</h2>
+        <p>The final piece of intel is locked within a secured spreadsheet. You must bypass its protection to retrieve the target data.</p>
+        <a href="locked.xlsx" download class="download-link" id="download-locked-xlsx">Download Secured Document (locked.xlsx)</a>
+        <div class="challenge-input-area">
+            <label for="passport-input">Find out the passport number of the spy who is leaking our data - it is hidden on Sheet 2 of this spreadsheet:</label>
+            <div>
+                <input type="text" id="passport-input" placeholder="Enter full passport MRZ line">
+                <button id="submit-passport-button">Submit Data</button>
+            </div>
+            <p id="level5-feedback" class="feedback-text"></p>
+        </div>
+    </div>
+
+    <div id="game-complete-content" style="display: none;">
+        <h1>MISSION ACCOMPLISHED!</h1>
+        <p>Congratulations, Agent. You have successfully navigated all protocols.</p>
+        <!-- Fireworks will be generated here by JS -->
+    </div>
+
+    <div class="popup-overlay" id="xml-popup-overlay"> <div class="popup-window"> <div class="popup-header"> <h2>Intercepted Network Traffic</h2> <button id="close-popup">×</button> </div> <div class="popup-content"> <pre id="xml-content-area"></pre> </div> </div> </div>
+
+    <script>
+        // DOM Elements
+        const door = document.getElementById('the-door');
+        const keypadDisplay = document.getElementById('keypad-display');
+        const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
+        const clearButton = document.getElementById('keypad-clear-button');
+        const xmlPopupOverlay = document.getElementById('xml-popup-overlay');
+        const xmlContentArea = document.getElementById('xml-content-area');
+        const closePopupButton = document.getElementById('close-popup');
+
+        const levelScreens = { // Renamed for clarity
+            'level1': document.getElementById('level1-content'), 'level2': document.getElementById('level2-content'),
+            'level3': document.getElementById('level3-content'), 'level4': document.getElementById('level4-content'),
+            'level5': document.getElementById('level5-content'), 'gameComplete': document.getElementById('game-complete-content')
+        };
+
+        // Level 2
+        const mapSearchInput = document.getElementById('map-search-input');
+        const mapSearchButton = document.getElementById('map-search-button');
+        const mapContainer = document.getElementById('map-container');
+        const mapFeedback = document.getElementById('map-feedback');
+        const baseImage = document.getElementById('base-image');
+
+        // Level 3
+        const pdfViewerContainerL3 = document.getElementById('pdf-viewer-container-l3');
+        const nameInput = document.getElementById('name-input');
+        const submitNameButton = document.getElementById('submit-name-button');
+        const level3Feedback = document.getElementById('level3-feedback');
+
+        // Level 4
+        const pdfViewerContainerL4 = document.getElementById('pdf-viewer-container-l4');
+        const imageUploadInput = document.getElementById('image-upload-input');
+        const submitImageButton = document.getElementById('submit-image-button');
+        const level4Feedback = document.getElementById('level4-feedback');
+
+        // Level 5
+        const downloadLockedXLSX = document.getElementById('download-locked-xlsx');
+        const passportInputL5 = document.getElementById('passport-input');
+        const submitPassportL5 = document.getElementById('submit-passport-button');
+        const level5Feedback = document.getElementById('level5-feedback');
+
+        // --- CONFIGURATION ---
+        const correctCodeL1 = "7864B";
+        const targetCoordsL2 = L.latLng(51.367472, -1.153556);
+        const maxDistanceL2 = 10 * 1609.34;
+        const correctNameL3 = "Eleanor Harding";
+        const targetImageHashL4 = "9bd6a07df2e2b617501cc1b364a2e66f3140b6c643b78dafcd13d6aa00f14d4b"; // Your actual hash
+        const correctPassportL5 = "A220001049D<<5708127<0704021<<<<<<<4";
+
+
+        let currentEnteredCode = "";
+        let animationInProgress = false;
+        let map; let userMarker;
+        let selectedFileL4 = null;
+
+        const xmlData = `<secure-access><level>5</level><restricted>true</restricted><uid>49</uid><base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64></secure-access>`.trim();
+
+        function showActiveScreen(screenId) { // More generic name
+            animationInProgress = true;
+            Object.values(levelScreens).forEach(screenDiv => screenDiv.style.display = 'none');
+            if (levelScreens[screenId]) {
+                levelScreens[screenId].style.display = 'flex'; // Use flex for centering content in all screens
+                 // Adjust overflow
+                if (screenId === 'level1' || screenId === 'gameComplete') {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = 'auto';
+                }
+            }
+            xmlPopupOverlay.classList.remove('visible');
+            animationInProgress = false;
+        }
+
+        function embedPDF(containerElement, pdfFileName) {
+            containerElement.innerHTML = '';
+            const pdfEmbed = document.createElement('embed');
+            pdfEmbed.setAttribute('src', pdfFileName); pdfEmbed.setAttribute('type', 'application/pdf');
+            pdfEmbed.setAttribute('width', '100%'); pdfEmbed.setAttribute('height', '100%');
+            pdfEmbed.onerror = () => { containerElement.innerHTML = `<p style="color: #f00; padding: 20px;">Error loading ${pdfFileName}.</p>`; };
+            containerElement.appendChild(pdfEmbed);
+        }
+
+        // --- Level 1 Logic ---
+        function updateDisplayL1() { keypadDisplay.textContent = currentEnteredCode; }
+        function handleKeyPressL1(key) { if (!animationInProgress && currentEnteredCode.length < correctCodeL1.length) { currentEnteredCode += key; updateDisplayL1(); } }
+        function clearInputL1() { if (!animationInProgress) { currentEnteredCode = ""; updateDisplayL1(); keypadDisplay.style.color = "#0f0"; } }
+        function checkCodeL1() {
+            if (currentEnteredCode === correctCodeL1) {
+                keypadDisplay.textContent = "ACCESS"; keypadDisplay.style.color = "#0f0"; door.classList.add('open');
+                setTimeout(() => { startLevel2(); door.classList.remove('open'); clearInputL1(); }, 1500);
+            } else { keypadDisplay.textContent = "DENIED"; keypadDisplay.style.color = "#f00"; setTimeout(clearInputL1, 1000); }
+        }
+        keypadInputButtons.forEach(b => { b.addEventListener('click', () => { const k = b.dataset.key; handleKeyPressL1(k); if (currentEnteredCode.length === correctCodeL1.length) checkCodeL1(); }); });
+        clearButton.addEventListener('click', clearInputL1);
+        function showXmlPopup() { xmlContentArea.textContent = xmlData; xmlPopupOverlay.classList.add('visible'); }
+        closePopupButton.addEventListener('click', () => { xmlPopupOverlay.classList.remove('visible'); });
+        function playIntroAnimation() {
+            animationInProgress = true; showActiveScreen('level1');
+            keypadDisplay.textContent = ""; let fake = "******", i = 0;
+            function type() {
+                if (i < fake.length) { keypadDisplay.textContent += fake[i]; i++; setTimeout(type, 200); }
+                else { setTimeout(() => { keypadDisplay.textContent = "ACCESS"; keypadDisplay.style.color = "#0f0"; door.classList.add('open'); }, 300);
+                    setTimeout(showXmlPopup, 1200);
+                    setTimeout(() => { door.classList.remove('open'); clearInputL1(); animationInProgress = false; }, 3500);
+                }
+            } type();
+        }
+
+        // --- Level 2 Logic ---
+        function startLevel2() {
+            showActiveScreen('level2');
+            baseImage.onerror = () => { baseImage.alt = "Error: base.jpg"; console.error("base.jpg not found!"); }
+            baseImage.src = "base.jpg";
+            mapSearchInput.disabled = false; mapSearchButton.disabled = false; mapSearchInput.value = "";
+            if (!map) { map = L.map(mapContainer).setView([52.5, -1.5], 6); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 18 }).addTo(map); }
+            else { map.invalidateSize(); map.setView([52.5, -1.5], 6); if (userMarker) map.removeLayer(userMarker); }
+            mapFeedback.textContent = "Scan Area."; mapFeedback.style.color = "#0f0";
+        }
+        mapSearchButton.addEventListener('click', performMapSearchL2); mapSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performMapSearchL2(); });
+        async function performMapSearchL2() { /* ... (code from previous step, unchanged) ... */
+            const query = mapSearchInput.value.trim();
+            if (!query) { mapFeedback.textContent = "Please enter a location."; mapFeedback.style.color = "#ff8c00"; return; }
+            mapFeedback.textContent = `Scanning for "${query}"...`; mapFeedback.style.color = "#0f0"; mapSearchButton.disabled = true;
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=gb`);
+                if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    const loc = data[0]; const latLng = L.latLng(parseFloat(loc.lat), parseFloat(loc.lon));
+                    map.setView(latLng, 10); if (userMarker) map.removeLayer(userMarker);
+                    userMarker = L.marker(latLng).addTo(map).bindPopup(`<b>${loc.display_name}</b>`).openPopup();
+                    const dist = targetCoordsL2.distanceTo(latLng); const distMiles = (dist / 1609.34).toFixed(1);
+                    if (dist <= maxDistanceL2) {
+                        mapFeedback.style.color = "#0f0"; mapFeedback.textContent = `TARGET CONFIRMED: ${loc.display_name} (${distMiles} miles). Accessing L3...`;
+                        mapSearchInput.disabled = true; mapSearchButton.disabled = true; setTimeout(startLevel3, 3000);
+                    } else {
+                        mapFeedback.style.color = "#ff8c00"; mapFeedback.textContent = `SCAN: No assets at "${loc.display_name}". (Signal ~${distMiles} miles from zone). Recalibrate.`;
+                        mapSearchButton.disabled = false;
+                    }
+                } else {
+                    mapFeedback.style.color = "#f00"; mapFeedback.textContent = `Location "${query}" not found. Try again.`; mapSearchButton.disabled = false;
+                }
+            } catch (err) { console.error("L2 Map search error:", err); mapFeedback.style.color = "#f00"; mapFeedback.textContent = "Scan failed."; mapSearchButton.disabled = false; }
+        }
+
+        // --- Level 3 Logic ---
+        function startLevel3() {
+            showActiveScreen('level3'); embedPDF(pdfViewerContainerL3, 'redacted.pdf');
+            nameInput.value = ""; nameInput.disabled = false; submitNameButton.disabled = false;
+            level3Feedback.textContent = "Examine document."; level3Feedback.style.color = "#0f0";
+        }
+        submitNameButton.addEventListener('click', checkNameL3); nameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkNameL3(); });
+        function checkNameL3() { /* ... (code from previous step, unchanged) ... */
+            const enteredName = nameInput.value.trim();
+            if (enteredName.toLowerCase() === correctNameL3.toLowerCase()) {
+                level3Feedback.style.color = "#0f0"; level3Feedback.textContent = "IDENTITY CONFIRMED. Accessing L4...";
+                nameInput.disabled = true; submitNameButton.disabled = true; setTimeout(startLevel4, 2500);
+            } else if (enteredName === "") { level3Feedback.style.color = "#ff8c00"; level3Feedback.textContent = "No name entered.";
+            } else { level3Feedback.style.color = "#f00"; level3Feedback.textContent = "Incorrect. Subject unidentified."; nameInput.value = ""; }
+        }
+
+        // --- Level 4 Logic ---
+        function startLevel4() {
+            showActiveScreen('level4'); embedPDF(pdfViewerContainerL4, 'horse.pdf');
+            imageUploadInput.value = null; selectedFileL4 = null; submitImageButton.disabled = true;
+            level4Feedback.textContent = "Upload specified image."; level4Feedback.style.color = "#0f0";
+        }
+        imageUploadInput.addEventListener('change', (e) => { /* ... (code from previous step, unchanged) ... */
+            selectedFileL4 = e.target.files[0];
+            if (selectedFileL4) { level4Feedback.textContent = `Selected: ${selectedFileL4.name}. Verify.`; level4Feedback.style.color = "#0f0"; submitImageButton.disabled = false;
+            } else { submitImageButton.disabled = true; level4Feedback.textContent = "No file selected."; level4Feedback.style.color = "#ff8c00"; }
+        });
+        submitImageButton.addEventListener('click', verifyImageL4);
+        async function verifyImageL4() { /* ... (code from previous step, unchanged) ... */
+            if (!selectedFileL4) { level4Feedback.textContent = "No image selected."; level4Feedback.style.color = "#ff8c00"; return; }
+            level4Feedback.textContent = "Verifying..."; level4Feedback.style.color = "#0f0"; submitImageButton.disabled = true;
+            try {
+                const buffer = await selectedFileL4.arrayBuffer(); const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+                const hexHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+                if (hexHash === targetImageHashL4) {
+                    level4Feedback.style.color = "#0f0"; level4Feedback.textContent = "IMAGE VERIFIED. Accessing L5...";
+                    imageUploadInput.disabled = true; setTimeout(startLevel5, 2500);
+                } else {
+                    level4Feedback.style.color = "#f00"; level4Feedback.textContent = "Verification Failed. Incorrect image. Try again.";
+                    submitImageButton.disabled = false; imageUploadInput.value = null; selectedFileL4 = null;
+                }
+            } catch (error) { console.error("Image hash error:", error); level4Feedback.style.color = "#f00"; level4Feedback.textContent = "Error processing image."; submitImageButton.disabled = false; imageUploadInput.value = null; selectedFileL4 = null;}
+        }
+
+        // --- Level 5 Logic ---
+        function startLevel5() {
+            showActiveScreen('level5');
+            passportInputL5.value = ""; passportInputL5.disabled = false;
+            submitPassportL5.disabled = false;
+            level5Feedback.textContent = "Extract the passport MRZ line from Sheet 2.";
+            level5Feedback.style.color = "#0f0";
+        }
+        submitPassportL5.addEventListener('click', checkPassportL5);
+        passportInputL5.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPassportL5(); });
+
+        function checkPassportL5() {
+            const enteredPassport = passportInputL5.value.trim();
+            // Remove all spaces for a more robust comparison, as MRZ lines sometimes have them visually but not in data
+            const cleanedEnteredPassport = enteredPassport.replace(/\s+/g, '');
+            const cleanedCorrectPassport = correctPassportL5.replace(/\s+/g, '');
+
+            if (cleanedEnteredPassport === cleanedCorrectPassport) {
+                level5Feedback.style.color = "#0f0";
+                level5Feedback.textContent = "PASSPORT DATA CONFIRMED. ALL PROTOCOLS COMPLETE!";
+                passportInputL5.disabled = true;
+                submitPassportL5.disabled = true;
+                setTimeout(startGameComplete, 2500);
+            } else if (enteredPassport === "") {
+                level5Feedback.style.color = "#ff8c00";
+                level5Feedback.textContent = "No passport data entered.";
+            } else {
+                level5Feedback.style.color = "#f00";
+                level5Feedback.textContent = "Incorrect passport data. Re-verify your extraction.";
+                passportInputL5.value = ""; // Clear wrong input
+            }
+        }
+
+        // --- Game Complete Logic ---
+        function startGameComplete() {
+            showActiveScreen('gameComplete');
+            launchFireworks();
+        }
+
+        function launchFireworks() {
+            const gameCompleteScreen = levelScreens['gameComplete'];
+            const numFireworks = 5; // Number of fireworks bursts
+            let delay = 0;
+
+            for (let i = 0; i < numFireworks; i++) {
+                setTimeout(() => createFireworkBurst(gameCompleteScreen), delay);
+                delay += 700 + Math.random() * 500; // Stagger bursts
+            }
+        }
+
+        function createFireworkBurst(container) {
+            const numParticles = 50 + Math.floor(Math.random() * 50); // 50-100 particles per burst
+            const burstX = Math.random() * 80 + 10; // % from left
+            const burstY = Math.random() * 50 + 20; // % from top (higher up)
+
+            const colors = ['#FF0000', '#FFA500', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#FF00FF', '#FFFFFF'];
+
+            for (let i = 0; i < numParticles; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('firework');
+                particle.style.left = `${burstX}%`;
+                particle.style.top = `${burstY}%`;
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+                // Random direction and distance for each particle
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 80 + 20; // pixels
+                particle.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+                particle.style.setProperty('--ty', `${Math.sin(angle) * distance}px`);
+
+                container.appendChild(particle);
+                // Remove particle after animation
+                setTimeout(() => {
+                    particle.remove();
+                }, 1000); // Matches animation duration
+            }
+        }
+        // Initial Load
+        window.addEventListener('load', playIntroAnimation);
+    </script>
+</body>
+</html>
