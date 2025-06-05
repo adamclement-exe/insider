@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<secure-access>
+    <level>5</level>
+    <restricted>true</restricted>
+    <uid>49</uid>
+    <base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64>
+</secure-access>
