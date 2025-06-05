@@ -200,7 +200,13 @@
         let map; let userMarker;
         let selectedFileL4 = null;
 
-        const xmlData = `<secure-access><level>5</level><restricted>true</restricted><uid>49</uid><base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64></secure-access>`.trim();
+        const xmlData = `
+        <secure-access>
+        <level>5</level>
+        <restricted>true</restricted>
+        <uid>49</uid>
+        <base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64>
+        </secure-access>`.trim();
 
         function showActiveScreen(screenId) { // More generic name
             animationInProgress = true;
