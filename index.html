@@ -25,51 +25,26 @@
         .screen-title { font-size: 2.5em; margin-bottom: 30px;}
 
         #title-screen-content { /* Specific for title screen */
-            background-color: #111; /* Darker for focus */
-            border: 2px solid #0f0;
-            padding: 40px;
-            border-radius: 10px;
-            max-width: 700px;
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+            background-color: #111; border: 2px solid #0f0; padding: 40px;
+            border-radius: 10px; max-width: 700px; box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
         }
-        #title-screen-content p {
-            font-size: 1.1em;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            color: #ccc;
-        }
-        #title-screen-content .mission-brief {
-            text-align: left;
-            margin-bottom: 30px;
-            border-left: 3px solid #0f0;
-            padding-left: 15px;
-        }
-        #title-screen-content .mission-brief strong {
-            color: #0f0;
-        }
+        #title-screen-content p { font-size: 1.1em; line-height: 1.6; margin-bottom: 15px; color: #ccc; }
+        #title-screen-content .mission-brief { text-align: left; margin-bottom: 30px; border-left: 3px solid #0f0; padding-left: 15px; }
+        #title-screen-content .mission-brief strong { color: #0f0; }
         #start-game-button {
-            background-color: #006400; /* DarkGreen */
-            color: #fff;
-            padding: 15px 30px;
-            font-size: 1.5em;
-            border: 2px solid #0f0;
-            border-radius: 8px;
-            cursor: pointer;
+            background-color: #006400; color: #fff; padding: 15px 30px; font-size: 1.5em;
+            border: 2px solid #0f0; border-radius: 8px; cursor: pointer;
             transition: background-color 0.3s, transform 0.1s;
         }
-        #start-game-button:hover { background-color: #008000; /* Green */ transform: scale(1.05); }
+        #start-game-button:hover { background-color: #008000; transform: scale(1.05); }
         #start-game-button:active { transform: scale(1); }
 
-
         .scene { display: flex; align-items: flex-end; gap: 50px; margin-top: 10px; }
-
-        /* Door CSS */
         .door-frame { width: 170px; height: 320px; background-color: #503020; padding: 15px; border-radius: 5px 5px 0 0; box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.2); perspective: 1000px; }
         .door { width: 100%; height: 100%; background-color: #8B4513; border: 2px solid #654321; position: relative; transform-origin: left center; transition: transform 0.8s ease-in-out; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2), inset -2px -2px 5px rgba(255,255,255,0.1); }
         .door.open { transform: rotateY(-110deg); }
         .door-handle { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; background-color: #c0c0c0; border-radius: 50%; box-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
 
-        /* Keypad CSS */
         .keypad-area { display: flex; flex-direction: column; align-items: center; background-color: #4a4a4a; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
         #keypad-display { width: 100%; height: 40px; background-color: #222; color: #0f0; border: 2px solid #555; border-radius: 5px; margin-bottom: 15px; font-size: 1.8em; text-align: center; letter-spacing: 2px; padding: 5px; box-sizing: border-box; user-select: none; }
         .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -77,7 +52,6 @@
         .keypad-grid button:hover { background-color: #777; }
         .keypad-grid button:active { background-color: #555; transform: scale(0.95); }
 
-        /* Popup CSS */
         .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .popup-overlay.visible { display: flex; }
         .popup-window { background-color: #2c2c2c; border: 2px solid #0a0; padding: 20px; border-radius: 8px; box-shadow: 0 0 25px rgba(0, 200, 0, 0.3); width: 80%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; }
@@ -88,43 +62,27 @@
         .popup-content { background-color: #1a1a1a; border: 1px solid #444; padding: 15px; overflow-y: auto; flex-grow: 1; }
         .popup-content pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; color: #ccc; }
 
-        /* Level 2-4 Common PDF Viewer CSS */
         #level3-content #pdf-viewer-container-l3, #level4-content #pdf-viewer-container-l4 { width: 90%; max-width: 800px; height: 450px; margin: 15px auto; border: 2px solid #0f0; background-color: #111; }
         #level3-content #pdf-viewer-container-l3 embed, #level3-content #pdf-viewer-container-l3 iframe,
         #level4-content #pdf-viewer-container-l4 embed, #level4-content #pdf-viewer-container-l4 iframe { width: 100%; height: 100%; border: none; }
 
-        /* Level specific input areas and feedback */
         .challenge-input-area { margin-top: 15px; text-align: center; }
         .challenge-input-area label { display: block; margin-bottom: 10px; color: #0f0; }
-        .challenge-input-area input[type="text"], .challenge-input-area input[type="file"] {
-            padding: 10px; margin-right: 10px; border-radius: 5px; border: 1px solid #0f0;
-            background-color: #333; color: #0f0; font-family: 'Courier New', Courier, monospace;
-        }
+        .challenge-input-area input[type="text"], .challenge-input-area input[type="file"] { padding: 10px; margin-right: 10px; border-radius: 5px; border: 1px solid #0f0; background-color: #333; color: #0f0; font-family: 'Courier New', Courier, monospace; }
         .challenge-input-area input[type="text"] { width: 250px; }
-        .challenge-input-area input[type="file"] { color: #ccc; } /* Style file input text */
-        .challenge-input-area button {
-            padding: 10px 15px; border-radius: 5px; border: 1px solid #0f0;
-            background-color: #0a0; color: #222; cursor: pointer;
-            font-family: 'Courier New', Courier, monospace; margin-top: 5px;
-        }
+        .challenge-input-area input[type="file"] { color: #ccc; }
+        .challenge-input-area button { padding: 10px 15px; border-radius: 5px; border: 1px solid #0f0; background-color: #0a0; color: #222; cursor: pointer; font-family: 'Courier New', Courier, monospace; margin-top: 5px; }
         .challenge-input-area button:hover { background-color: #0c0; }
         .challenge-input-area button:disabled { background-color: #555; cursor: not-allowed;}
         .feedback-text { margin-top: 10px; color: #0f0; min-height: 1.2em; }
 
-
-        /* Level 2 CSS */
         #level2-content img { max-width: 90%; max-height: 300px; height: auto; margin-bottom: 20px; border: 3px solid #0f0; border-radius: 5px; background-color: #111; }
         #level2-content #map-container { height: 400px; width: 80%; max-width: 700px; margin: 20px auto; border: 2px solid #0f0; border-radius: 5px; }
 
-        /* Level 5 Specific Styles */
-        #level5-content .download-link {
-            display: inline-block; padding: 10px 20px; margin: 20px auto; background-color: #004400;
-            color: #0f0; border: 1px solid #0f0; text-decoration: none; border-radius: 5px;
-        }
+        #level5-content .download-link { display: inline-block; padding: 10px 20px; margin: 20px auto; background-color: #004400; color: #0f0; border: 1px solid #0f0; text-decoration: none; border-radius: 5px; }
         #level5-content .download-link:hover { background-color: #006600; }
         #level5-content #passport-input { width: 350px; }
 
-        /* Game Complete Screen & Fireworks */
         #game-complete-content { text-align: center; color: #0f0; position: relative; width: 100%; height: 100vh; background-color: #111; }
         #game-complete-content h1 { font-size: 3em; margin-top: 30vh; }
         .firework { position: absolute; width: 4px; height: 4px; background-color: white; border-radius: 50%; opacity: 1; animation: firework-burst 1s ease-out forwards; }
@@ -185,33 +143,29 @@
         const closePopupButton = document.getElementById('close-popup');
 
         const levelScreens = {
-            'title': document.getElementById('title-screen-content'), // Added title screen
+            'title': document.getElementById('title-screen-content'),
             'level1': document.getElementById('level1-content'), 'level2': document.getElementById('level2-content'),
             'level3': document.getElementById('level3-content'), 'level4': document.getElementById('level4-content'),
             'level5': document.getElementById('level5-content'), 'gameComplete': document.getElementById('game-complete-content')
         };
         const startGameButton = document.getElementById('start-game-button');
 
-        // Level 2
         const mapSearchInput = document.getElementById('map-search-input');
         const mapSearchButton = document.getElementById('map-search-button');
         const mapContainer = document.getElementById('map-container');
         const mapFeedback = document.getElementById('map-feedback');
         const baseImage = document.getElementById('base-image');
 
-        // Level 3
         const pdfViewerContainerL3 = document.getElementById('pdf-viewer-container-l3');
         const nameInputL3 = document.getElementById('name-input');
         const submitNameButtonL3 = document.getElementById('submit-name-button');
         const level3Feedback = document.getElementById('level3-feedback');
 
-        // Level 4
         const pdfViewerContainerL4 = document.getElementById('pdf-viewer-container-l4');
-        const imageUploadInputL4 = document.getElementById('image-upload-input'); // Renamed for clarity
+        const imageUploadInputL4 = document.getElementById('image-upload-input');
         const submitImageButtonL4 = document.getElementById('submit-image-button');
         const level4Feedback = document.getElementById('level4-feedback');
 
-        // Level 5
         const passportInputL5 = document.getElementById('passport-input');
         const submitPassportL5 = document.getElementById('submit-passport-button');
         const level5Feedback = document.getElementById('level5-feedback');
@@ -221,10 +175,10 @@
         const targetCoordsL2 = L.latLng(51.367472, -1.153556);
         const maxDistanceL2 = 10 * 1609.34;
         const correctNameL3 = "Eleanor Harding";
-        // IMPORTANT: Replace with your actual pre-calculated HEX aHash strings
-        const targetImageAHashL4_Option1 = "080E1B7E7F3F3E3F"; // Target Hex aHash 1
-        const targetImageAHashL4_Option2 = "0E0F5BDFDF7A787D"; // Target Hex aHash 2
-        const AHashSize = 8; // Size for aHash (8x8 = 64 bits)
+        // CRITICAL: Replace these with the HEX aHash strings generated by YOUR aHash generator for your target image variations
+        const targetImageAHashL4_Option1 = "080E1B7E7F3F3E3F"; // Example Target Hex aHash 1
+        const targetImageAHashL4_Option2 = "0E0F5BDFDF7A787D"; // Example Target Hex aHash 2
+        // const AHashSizeL4 = 8; // The computeAHashForGame function will use size 8 internally
         const correctPassportL5 = "A220001049D<<5708127<0704021<<<<<<<4";
 
         let currentEnteredCode = "";
@@ -232,7 +186,13 @@
         let map; let userMarker;
         let selectedFileL4 = null;
 
-        const xmlData = `<secure-access><level>5</level><restricted>true</restricted><uid>49</uid><base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64></secure-access>`.trim();
+        const xmlData = `
+        <secure-access>
+        <level>5</level>
+        <restricted>true</restricted>
+        <uid>49</uid>
+        <base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64>
+</secure-access>`.trim();
 
         function showActiveScreen(screenId) {
             animationInProgress = true;
@@ -254,12 +214,8 @@
             containerElement.appendChild(pdfEmbed);
         }
 
-        // --- Title Screen Logic ---
-        startGameButton.addEventListener('click', () => {
-            playIntroAnimation(); // This will show Level 1 and start the door animation
-        });
+        startGameButton.addEventListener('click', () => { playIntroAnimation(); });
 
-        // --- Level 1 Logic ---
         function updateDisplayL1() { keypadDisplay.textContent = currentEnteredCode; }
         function handleKeyPressL1(key) { if (!animationInProgress && currentEnteredCode.length < correctCodeL1.length) { currentEnteredCode += key; updateDisplayL1(); } }
         function clearInputL1() { if (!animationInProgress) { currentEnteredCode = ""; updateDisplayL1(); keypadDisplay.style.color = "#0f0"; } }
@@ -285,7 +241,6 @@
             } type();
         }
 
-        // --- Level 2 Logic ---
         function startLevel2() {
             showActiveScreen('level2');
             baseImage.onerror = () => { baseImage.alt = "Error: base.jpg"; console.error("base.jpg not found!"); }
@@ -322,7 +277,6 @@
             } catch (err) { console.error("L2 Map search error:", err); mapFeedback.style.color = "#f00"; mapFeedback.textContent = "Scan failed."; mapSearchButton.disabled = false; }
         }
 
-        // --- Level 3 Logic ---
         function startLevel3() {
             showActiveScreen('level3'); embedPDF(pdfViewerContainerL3, 'redacted.pdf');
             nameInputL3.value = ""; nameInputL3.disabled = false; submitNameButtonL3.disabled = false;
@@ -351,65 +305,63 @@
         });
         submitImageButtonL4.addEventListener('click', verifyImageL4);
 
-        function binaryToHex(binaryString) {
-            if (binaryString.length % 4 !== 0) {
-                console.error("Binary string length must be a multiple of 4 to convert to hex cleanly.");
-                while (binaryString.length % 4 !== 0) { binaryString = "0" + binaryString; }
-            }
-            let hex = "";
-            for (let i = 0; i < binaryString.length; i += 4) {
-                const nibble = binaryString.substring(i, i + 4);
-                hex += parseInt(nibble, 2).toString(16).toUpperCase();
-            }
-            return hex;
-        }
-
-        async function generateAHash(file, size = 8) {
+        // aHash function based on the provided generator
+        async function computeAHashForGame(imageFileObject) {
             return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = size; canvas.height = size;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, size, size);
-                        try {
-                            const imageData = ctx.getImageData(0, 0, size, size).data;
-                            let totalLuminance = 0; const luminances = [];
-                            for (let i = 0; i < imageData.length; i += 4) {
-                                const r = imageData[i], g = imageData[i+1], b = imageData[i+2];
-                                const luminance = (r + g + b) / 3; 
-                                luminances.push(luminance); totalLuminance += luminance;
-                            }
-                            if (luminances.length !== size * size) { reject(new Error(`Pixel data length mismatch. Expected ${size*size}, got ${luminances.length}`)); return; }
-                            const avgLuminance = totalLuminance / (size * size);
-                            let aHashBinary = "";
-                            for (const lum of luminances) { aHashBinary += (lum >= avgLuminance) ? '1' : '0'; }
-                            resolve(aHashBinary);
-                        } catch (e) { reject(new Error("Canvas getImageData failed. Error: " + e.message)); }
-                    };
-                    img.onerror = () => reject(new Error("Image could not be loaded by Image object."));
-                    img.src = event.target.result;
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 8; // Fixed 8x8 size
+                    canvas.height = 8;
+                    ctx.drawImage(img, 0, 0, 8, 8);
+                    try {
+                        const imageData = ctx.getImageData(0, 0, 8, 8).data;
+                        let sum = 0; const pixels = [];
+                        for (let i = 0; i < imageData.length; i += 4) {
+                            const gray = 0.299 * imageData[i] + 0.587 * imageData[i + 1] + 0.114 * imageData[i + 2];
+                            pixels.push(gray); sum += gray;
+                        }
+                        const mean = sum / 64; // 8x8 = 64 pixels
+                        let binaryHash = '';
+                        for (let i = 0; i < pixels.length; i++) {
+                            binaryHash += pixels[i] > mean ? '1' : '0';
+                        }
+                        let hexHash = '';
+                        for (let i = 0; i < binaryHash.length; i += 4) {
+                            const chunk = binaryHash.slice(i, i + 4);
+                            hexHash += parseInt(chunk, 2).toString(16);
+                        }
+                        resolve(hexHash.toUpperCase());
+                    } catch (e) { reject(new Error("Canvas getImageData failed for aHash. Error: " + e.message));}
                 };
-                reader.onerror = () => reject(new Error("FileReader could not read the file."));
-                reader.readAsDataURL(file);
+                img.onerror = () => reject(new Error("Image could not be loaded by Image object for aHash."));
+                
+                // Read the file object to set img.src
+                const reader = new FileReader();
+                reader.onload = (event) => { img.src = event.target.result; };
+                reader.onerror = () => reject(new Error("FileReader could not read file for aHash."));
+                reader.readAsDataURL(imageFileObject);
             });
         }
 
         async function verifyImageL4() {
             if (!selectedFileL4) { level4Feedback.textContent = "No image selected."; level4Feedback.style.color = "#ff8c00"; return; }
             level4Feedback.textContent = "Verifying Image Structure..."; level4Feedback.style.color = "#0f0"; submitImageButtonL4.disabled = true;
-             // Ensure target hashes are not placeholder values.
-            if (targetImageAHashL4_Option1.startsWith("PUT_YOUR") || targetImageAHashL4_Option2.startsWith("PUT_YOUR")) {
-                level4Feedback.style.color = "#f00";
-                level4Feedback.textContent = "DEVELOPER ERROR: Target aHash(es) not set in script.";
-                submitImageButtonL4.disabled = false;
-                return;
+            if (targetImageAHashL4_Option1.startsWith("080E") && targetImageAHashL4_Option2.startsWith("0E0F")) { // Example check
+                 // Allow if using default example hashes for testing, but ideally these are replaced.
+            } else if (targetImageAHashL4_Option1.includes("YOUR_") || targetImageAHashL4_Option2.includes("YOUR_")) {
+                 level4Feedback.style.color = "#f00";
+                 level4Feedback.textContent = "DEVELOPER ERROR: Target aHash(es) not set in script.";
+                 submitImageButtonL4.disabled = false; return;
             }
+
             try {
-                const uploadedImageBinaryAHash = await generateAHash(selectedFileL4, AHashSize);
-                const uploadedImageHexAHash = binaryToHex(uploadedImageBinaryAHash);
+                const uploadedImageHexAHash = await computeAHashForGame(selectedFileL4);
+                // console.log("Uploaded Hex aHash:", uploadedImageHexAHash); // For debugging
+                // console.log("Expected Hex Option 1:", targetImageAHashL4_Option1);
+                // console.log("Expected Hex Option 2:", targetImageAHashL4_Option2);
+
                 if (uploadedImageHexAHash.toUpperCase() === targetImageAHashL4_Option1.toUpperCase() ||
                     uploadedImageHexAHash.toUpperCase() === targetImageAHashL4_Option2.toUpperCase()) {
                     level4Feedback.style.color = "#0f0"; level4Feedback.textContent = "IMAGE STRUCTURE VERIFIED. Accessing L5...";
@@ -469,11 +421,7 @@
             }
         }
 
-        // Initial Load
-        window.addEventListener('load', () => {
-            showActiveScreen('title'); // Show title screen first
-            // playIntroAnimation(); // This will be called by the start game button
-        });
+        window.addEventListener('load', () => { showActiveScreen('title'); });
     </script>
 </body>
 </html>
