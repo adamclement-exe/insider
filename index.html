@@ -199,7 +199,7 @@
             Object.values(levelScreens).forEach(screenDiv => screenDiv.style.display = 'none');
             if (levelScreens[screenId]) {
                 levelScreens[screenId].style.display = 'flex';
-                document.body.style.overflow = (screenId === 'level1' || screenId === 'gameComplete' || screenId === 'title') ? 'hidden' : 'auto';
+               // document.body.style.overflow = (screenId === 'level1' || screenId === 'gameComplete' || screenId === 'title') ? 'hidden' : 'auto';
             }
             xmlPopupOverlay.classList.remove('visible');
             animationInProgress = false;
