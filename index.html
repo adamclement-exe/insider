@@ -46,17 +46,55 @@
         #start-game-button:active { transform: scale(1); }
 
         .scene { display: flex; align-items: flex-end; gap: 50px; margin-top: 10px; }
-        .door-frame { width: 170px; height: 320px; background-color: #503020; padding: 15px; border-radius: 5px 5px 0 0; box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.2); perspective: 1000px; }
-        .door { width: 100%; height: 100%; background-color: #8B4513; border: 2px solid #654321; position: relative; transform-origin: left center; transition: transform 0.8s ease-in-out; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2), inset -2px -2px 5px rgba(255,255,255,0.1); }
-        .door.open { transform: rotateY(-110deg); }
-        .door-handle { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; background-color: #c0c0c0; border-radius: 50%; box-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+        
+        /* New Rocket & Hatch Styles */
+        .rocket-body {
+            width: 250px; height: 350px;
+            background: linear-gradient(90deg, #b0b0b0, #e0e0e0, #b0b0b0);
+            border: 2px solid #888; border-radius: 40px 40px 0 0;
+            position: relative; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 5px 0 10px rgba(0,0,0,0.2);
+            perspective: 1000px;
+        }
+        .hatch {
+            width: 160px; height: 160px;
+            background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+            border: 5px solid #666; border-radius: 50%;
+            position: relative; display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.4);
+            transform-origin: left center;
+            transition: transform 0.8s ease-in-out;
+        }
+        .hatch.open { transform: rotateY(-110deg) scale(0.9); }
+        .hatch-window {
+            width: 50px; height: 50px;
+            background-color: #1a2a3a;
+            border: 4px solid #555; border-radius: 50%;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
+        }
+        .hatch-handle {
+            position: absolute; right: 10px; top: 50%;
+            transform: translateY(-50%);
+            width: 20px; height: 40px;
+            background-color: #c0c0c0; border: 2px solid #555; border-radius: 5px;
+        }
 
         .keypad-area { display: flex; flex-direction: column; align-items: center; background-color: #4a4a4a; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        #capture-packet-button {
+            width: 100%; padding: 10px; margin-bottom: 15px;
+            border-radius: 5px; border: 1px solid #0f0; background-color: #0a0;
+            color: #222; cursor: pointer; font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1em;
+        }
+        #capture-packet-button:hover { background-color: #0c0; }
+        #capture-packet-button:disabled { background-color: #555; color: #888; cursor: not-allowed; }
+
         #keypad-display { width: 100%; height: 40px; background-color: #222; color: #0f0; border: 2px solid #555; border-radius: 5px; margin-bottom: 15px; font-size: 1.8em; text-align: center; letter-spacing: 2px; padding: 5px; box-sizing: border-box; user-select: none; }
         .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .keypad-grid button { width: 60px; height: 60px; background-color: #666; color: white; border: 1px solid #888; border-radius: 8px; font-size: 1.5em; cursor: pointer; transition: background-color 0.2s, transform 0.1s; user-select: none; }
         .keypad-grid button:hover { background-color: #777; }
         .keypad-grid button:active { background-color: #555; transform: scale(0.95); }
+        .keypad-grid button:disabled { background-color: #444; color: #777; cursor: not-allowed; }
 
         .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .popup-overlay.visible { display: flex; }
@@ -87,8 +125,7 @@
 
         #level5-content .download-link { display: inline-block; padding: 10px 20px; margin: 20px auto; background-color: #004400; color: #0f0; border: 1px solid #0f0; text-decoration: none; border-radius: 5px; }
         #level5-content .download-link:hover { background-color: #006600; }
-        #level5-content #passport-input { width: 350px; }
-
+        
         #game-complete-content { text-align: center; color: #0f0; position: relative; width: 100%; height: 100vh; background-color: #111; }
         #game-complete-content h1 { font-size: 3em; margin-top: 30vh; }
         .firework { position: absolute; width: 4px; height: 4px; background-color: white; border-radius: 50%; opacity: 1; animation: firework-burst 1s ease-out forwards; }
@@ -97,7 +134,7 @@
 </head>
 <body>
     <div id="title-screen-content" class="screen-container">
-        <h1 class="screen-title">Exeter College Taster Day - Insider Threats</h1>
+        <h1 class="screen-title">Hacking the Mission to Mars</h1>
         <div class="mission-brief">
             <p><strong>Your Mission:</strong></p>
             <p><strong>Level 1: Interception & Encoding</strong> - Bypass initial security by decoding intercepted traffic.</p>
@@ -111,24 +148,85 @@
     </div>
 
     <div id="level1-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 1: Interception & Encoding</h1>
-        <div class="scene"> <div class="door-frame"> <div class="door" id="the-door"> <div class="door-handle"></div> </div> </div> <div class="keypad-area"> <div id="keypad-display"></div> <div class="keypad-grid"> <button data-key="1">1</button> <button data-key="2">2</button> <button data-key="3">3</button> <button data-key="4">4</button> <button data-key="5">5</button> <button data-key="6">6</button> <button data-key="7">7</button> <button data-key="8">8</button> <button data-key="9">9</button> <button data-key="A">A</button> <button data-key="0">0</button> <button data-key="B">B</button> <button id="keypad-clear-button" style="grid-column: span 3;">CLR</button> </div> </div> </div>
+        <h1 class="level-title">Level 1: Gain Access to the Rocket</h1>
+        <div class="scene">
+            <div class="rocket-body">
+                <div class="hatch" id="the-hatch">
+                    <div class="hatch-window"></div>
+                    <div class="hatch-handle"></div>
+                </div>
+            </div>
+            <div class="keypad-area">
+                <button id="capture-packet-button">Capture Packet</button>
+                <div id="keypad-display"></div>
+                <div class="keypad-grid">
+                    <button data-key="1">1</button> <button data-key="2">2</button> <button data-key="3">3</button>
+                    <button data-key="4">4</button> <button data-key="5">5</button> <button data-key="6">6</button>
+                    <button data-key="7">7</button> <button data-key="8">8</button> <button data-key="9">9</button>
+                    <button data-key="A">A</button> <button data-key="0">0</button> <button data-key="B">B</button>
+                    <button id="keypad-clear-button" style="grid-column: span 3;">CLR</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="level2-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 2: Geo-Locate Asset</h1> <img src="base.jpg" alt="Intercepted Image - Potential Target" id="base-image"> <h2>Objective: Pinpoint Target Vicinity</h2> <p>The intercepted image points to a high-value asset. We need to confirm its general operating area.</p> <p>Use the map to find a location that matches our intelligence parameters (within a 10-mile radius of the suspected zone).</p> <div class="challenge-input-area"> <input type="text" id="map-search-input" placeholder="e.g., City, Town, Region"> <button id="map-search-button">Scan Area</button> </div> <div id="map-container"></div> <p id="map-feedback" class="feedback-text"></p>
+        <h1 class="level-title">Level 2: Geo-Locate Asset</h1>
+        <img src="base.jpg" alt="Intercepted Image - Potential Target" id="base-image">
+        <h2>Objective: Pinpoint Mission Control</h2>
+        <p>The intercepted image points to the location of Mission Control. We need to confirm its general operating area.</p>
+        <p>Use the map to find a location that matches our intelligence parameters (within a 10-mile radius of the suspected launch command zone).</p>
+        <div class="challenge-input-area">
+            <input type="text" id="map-search-input" placeholder="e.g., City, Town, Region">
+            <button id="map-search-button">Scan Area</button>
+        </div>
+        <div id="map-container"></div>
+        <p id="map-feedback" class="feedback-text"></p>
     </div>
 
     <div id="level3-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 3: Source Identification</h1> <h2>Objective: Identify the Document Originator</h2> <p>A heavily redacted document has been recovered. Analyze it carefully to determine its source.</p> <div id="pdf-viewer-container-l3"></div> <div class="challenge-input-area"> <label for="name-input">We need to find out who sent this letter, what is their full name?</label> <div> <input type="text" id="name-input" placeholder="Enter full name"> <button id="submit-name-button">Submit Name</button> </div> <p id="level3-feedback" class="feedback-text"></p> </div>
+        <h1 class="level-title">Level 3: Source Identification</h1>
+        <h2>Objective: Identify the Mission Commander</h2>
+        <p>A heavily redacted document has been recovered. Analyze it carefully to determine its source.</p>
+        <div id="pdf-viewer-container-l3"></div>
+        <div class="challenge-input-area">
+            <label for="name-input">We need to find out who sent this letter, what is their full name?</label>
+            <div>
+                <input type="text" id="name-input" placeholder="Enter full name">
+                <button id="submit-name-button">Submit Name</button>
+            </div>
+            <p id="level3-feedback" class="feedback-text"></p>
+        </div>
     </div>
 
     <div id="level4-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 4: Visual Data Extraction</h1> <h2>Objective: Recover Specific Visual Asset</h2> <p>Intelligence suggests a critical image is embedded or referenced within the provided document "horse.pdf". Locate and extract this image.</p> <div id="pdf-viewer-container-l4"></div> <div class="challenge-input-area"> <label for="image-upload-input">Find the image of military vehicles in this PDF document and upload it:</label> <input type="file" id="image-upload-input" accept="image/*"> <button id="submit-image-button" disabled>Verify Image Structure</button> <p id="level4-feedback" class="feedback-text"></p> </div>
+        <h1 class="level-title">Level 4: Data Extraction</h1>
+        <h2>Objective: Recover the Launch Code</h2>
+        <p>Intelligence suggests the rocket's launch code is embedded or referenced within the provided document. Locate and extract this 6 character code.</p>
+        <div id="pdf-viewer-container-l4"></div>
+        <div class="challenge-input-area">
+            <label for="launch-code-input">Enter the 6-character launch code:</label>
+            <div>
+                <input type="text" id="launch-code-input" placeholder="Enter launch code" maxlength="6">
+                <button id="submit-launch-code-button">Verify Code</button>
+            </div>
+            <p id="level4-feedback" class="feedback-text"></p>
+        </div>
     </div>
 
     <div id="level5-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 5: Final Decryption</h1> <h2>Objective: Extract Critical Operative Data</h2> <p>The final piece of intel is locked within a secured spreadsheet. You must bypass its protection to retrieve the target data.</p> <a href="locked.xlsx" download class="download-link" id="download-locked-xlsx">Download Secured Document (locked.xlsx)</a> <div class="challenge-input-area"> <label for="passport-input">Find out the passport number of the spy who is leaking our data - it is hidden on Sheet 2 of this spreadsheet:</label> <div> <input type="text" id="passport-input" placeholder="Enter full passport MRZ line"> <button id="submit-passport-button">Submit Data</button> </div> <p id="level5-feedback" class="feedback-text"></p> </div>
+        <h1 class="level-title">Level 5: Final Decryption</h1>
+        <h2>Objective: Confirm Mission Status</h2>
+        <p>The final piece of intel is locked within a secured spreadsheet. You must bypass its protection to retrieve the target data.</p>
+        <a href="locked.xlsx" download class="download-link" id="download-locked-xlsx">Download Secured Document (locked.xlsx)</a>
+        <div class="challenge-input-area">
+            <label for="mission-status-input">Find the mission status of the mission captained by "Richard Anderson". The data is on Sheet 2.</label>
+            <div>
+                <input type="text" id="mission-status-input" placeholder="Enter mission status">
+                <button id="submit-status-button">Submit Data</button>
+            </div>
+            <p id="level5-feedback" class="feedback-text"></p>
+        </div>
     </div>
 
     <div id="game-complete-content" class="screen-container" style="display: none;">
@@ -139,10 +237,11 @@
 
     <script>
         // DOM Elements
-        const door = document.getElementById('the-door');
+        const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
         const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
         const clearButton = document.getElementById('keypad-clear-button');
+        const capturePacketButton = document.getElementById('capture-packet-button');
         const xmlPopupOverlay = document.getElementById('xml-popup-overlay');
         const xmlContentArea = document.getElementById('xml-content-area');
         const closePopupButton = document.getElementById('close-popup');
@@ -167,29 +266,25 @@
         const level3Feedback = document.getElementById('level3-feedback');
 
         const pdfViewerContainerL4 = document.getElementById('pdf-viewer-container-l4');
-        const imageUploadInputL4 = document.getElementById('image-upload-input');
-        const submitImageButtonL4 = document.getElementById('submit-image-button');
+        const launchCodeInputL4 = document.getElementById('launch-code-input');
+        const submitLaunchCodeButtonL4 = document.getElementById('submit-launch-code-button');
         const level4Feedback = document.getElementById('level4-feedback');
 
-        const passportInputL5 = document.getElementById('passport-input');
-        const submitPassportL5 = document.getElementById('submit-passport-button');
+        const missionStatusInputL5 = document.getElementById('mission-status-input');
+        const submitStatusButtonL5 = document.getElementById('submit-status-button');
         const level5Feedback = document.getElementById('level5-feedback');
 
-        // --- CONFIGURATION ---
-        const correctCodeL1 = "7864B";
+        // --- CONFIGURATION - ANSWERS ENCODED IN BASE64 ---
+        const correctCodeL1_b64 = 'Nzg2NEI=';                 // "7864B"
         const targetCoordsL2 = L.latLng(51.367472, -1.153556);
         const maxDistanceL2 = 10 * 1609.34;
-        const correctNameL3 = "Eleanor Harding";
-        // Actual Hashes (ensure these are the correct 16-character HEX strings from your generator)
-        const targetImageAHashL4_Option1 = "080E1B7E7F3F3E3F";
-        const targetImageAHashL4_Option2 = "0E0F5BDFDF7A787D";
-        const targetImageAHashL4_Option3 = "0E0F5BDFDF7A387D";
-        const correctPassportL5 = "A220001049D<<5708127<0704021<<<<<<<4";
+        const correctNameL3_b64 = 'RWxlYW5vciBIYXJkaW5n';   // "Eleanor Harding"
+        const correctLaunchCodeL4_b64 = 'NzU0NzA5';           // "754709"
+        const correctMissionStatusL5_b64 = 'TWlzc2luZw==';  // "Missing"
 
         let currentEnteredCode = "";
         let animationInProgress = false;
         let map; let userMarker;
-        let selectedFileL4 = null;
 
         const xmlData = `
         <secure-access>
@@ -204,7 +299,6 @@
             Object.values(levelScreens).forEach(screenDiv => screenDiv.style.display = 'none');
             if (levelScreens[screenId]) {
                 levelScreens[screenId].style.display = 'flex';
-               // document.body.style.overflow = (screenId === 'level1' || screenId === 'gameComplete' || screenId === 'title') ? 'hidden' : 'auto';
             }
             xmlPopupOverlay.classList.remove('visible');
             animationInProgress = false;
@@ -219,29 +313,50 @@
             containerElement.appendChild(pdfEmbed);
         }
 
-        startGameButton.addEventListener('click', () => { playIntroAnimation(); });
+        startGameButton.addEventListener('click', () => { initLevel1(); });
+        capturePacketButton.addEventListener('click', playIntroAnimation);
+
+        function initLevel1() {
+            showActiveScreen('level1');
+            keypadInputButtons.forEach(b => b.disabled = true);
+            clearButton.disabled = true;
+            capturePacketButton.disabled = false;
+            keypadDisplay.textContent = "LOCKED";
+            keypadDisplay.style.color = "#ff8c00";
+        }
 
         function updateDisplayL1() { keypadDisplay.textContent = currentEnteredCode; }
-        function handleKeyPressL1(key) { if (!animationInProgress && currentEnteredCode.length < correctCodeL1.length) { currentEnteredCode += key; updateDisplayL1(); } }
+        function handleKeyPressL1(key) { if (!animationInProgress && currentEnteredCode.length < atob(correctCodeL1_b64).length) { currentEnteredCode += key; updateDisplayL1(); } }
         function clearInputL1() { if (!animationInProgress) { currentEnteredCode = ""; updateDisplayL1(); keypadDisplay.style.color = "#0f0"; } }
         function checkCodeL1() {
-            if (currentEnteredCode === correctCodeL1) {
-                keypadDisplay.textContent = "ACCESS"; keypadDisplay.style.color = "#0f0"; door.classList.add('open');
-                setTimeout(() => { startLevel2(); door.classList.remove('open'); clearInputL1(); }, 1500);
+            if (currentEnteredCode.toUpperCase() === atob(correctCodeL1_b64).toUpperCase()) {
+                keypadDisplay.textContent = "ACCESS"; keypadDisplay.style.color = "#0f0"; hatchElement.classList.add('open');
+                setTimeout(() => { startLevel2(); hatchElement.classList.remove('open'); clearInputL1(); }, 1500);
             } else { keypadDisplay.textContent = "DENIED"; keypadDisplay.style.color = "#f00"; setTimeout(clearInputL1, 1000); }
         }
-        keypadInputButtons.forEach(b => { b.addEventListener('click', () => { const k = b.dataset.key; handleKeyPressL1(k); if (currentEnteredCode.length === correctCodeL1.length) checkCodeL1(); }); });
+        keypadInputButtons.forEach(b => { b.addEventListener('click', () => { const k = b.dataset.key; handleKeyPressL1(k); if (currentEnteredCode.length === atob(correctCodeL1_b64).length) checkCodeL1(); }); });
         clearButton.addEventListener('click', clearInputL1);
         function showXmlPopup() { xmlContentArea.textContent = xmlData; xmlPopupOverlay.classList.add('visible'); }
         closePopupButton.addEventListener('click', () => { xmlPopupOverlay.classList.remove('visible'); });
+        
         function playIntroAnimation() {
-            animationInProgress = true; showActiveScreen('level1');
-            keypadDisplay.textContent = ""; let fake = "******", i = 0;
+            animationInProgress = true;
+            capturePacketButton.disabled = true;
+            keypadDisplay.textContent = "";
+            let fake = "******", i = 0;
             function type() {
                 if (i < fake.length) { keypadDisplay.textContent += fake[i]; i++; setTimeout(type, 200); }
-                else { setTimeout(() => { keypadDisplay.textContent = "ACCESS"; keypadDisplay.style.color = "#0f0"; door.classList.add('open'); }, 300);
+                else { 
+                    setTimeout(() => { keypadDisplay.textContent = "DECODING"; keypadDisplay.style.color = "#0f0"; hatchElement.classList.add('open'); }, 300);
                     setTimeout(showXmlPopup, 1200);
-                    setTimeout(() => { door.classList.remove('open'); clearInputL1(); animationInProgress = false; }, 3500);
+                    setTimeout(() => { 
+                        hatchElement.classList.remove('open'); 
+                        clearInputL1(); 
+                        animationInProgress = false;
+                        keypadInputButtons.forEach(b => b.disabled = false);
+                        clearButton.disabled = false;
+                        keypadDisplay.textContent = "";
+                    }, 3500);
                 }
             } type();
         }
@@ -270,10 +385,12 @@
                     userMarker = L.marker(latLng).addTo(map).bindPopup(`<b>${loc.display_name}</b>`).openPopup();
                     const dist = targetCoordsL2.distanceTo(latLng); const distMiles = (dist / 1609.34).toFixed(1);
                     if (dist <= maxDistanceL2) {
-                        mapFeedback.style.color = "#0f0"; mapFeedback.textContent = `TARGET CONFIRMED: ${loc.display_name} (${distMiles} miles). Accessing L3...`;
+                        mapFeedback.style.color = "#0f0";
+                        mapFeedback.textContent = `MISSION CONTROL CONFIRMED: ${loc.display_name} (${distMiles} miles). Accessing L3...`;
                         mapSearchInput.disabled = true; mapSearchButton.disabled = true; setTimeout(startLevel3, 3000);
                     } else {
-                        mapFeedback.style.color = "#ff8c00"; mapFeedback.textContent = `SCAN: No assets at "${loc.display_name}". (Signal ~${distMiles} miles from zone). Recalibrate.`;
+                        mapFeedback.style.color = "#ff8c00";
+                        mapFeedback.textContent = `SCAN: Negative contact at "${loc.display_name}". (Signal ~${distMiles} miles from command zone). Recalibrate.`;
                         mapSearchButton.disabled = false;
                     }
                 } else {
@@ -290,7 +407,7 @@
         submitNameButtonL3.addEventListener('click', checkNameL3); nameInputL3.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkNameL3(); });
         function checkNameL3() {
             const enteredName = nameInputL3.value.trim();
-            if (enteredName.toLowerCase() === correctNameL3.toLowerCase()) {
+            if (enteredName.toLowerCase() === atob(correctNameL3_b64).toLowerCase()) {
                 level3Feedback.style.color = "#0f0"; level3Feedback.textContent = "IDENTITY CONFIRMED. Accessing L4...";
                 nameInputL3.disabled = true; submitNameButtonL3.disabled = true; setTimeout(startLevel4, 2500);
             } else if (enteredName === "") { level3Feedback.style.color = "#ff8c00"; level3Feedback.textContent = "No name entered.";
@@ -299,95 +416,63 @@
 
         // --- Level 4 Logic ---
         function startLevel4() {
-            showActiveScreen('level4'); embedPDF(pdfViewerContainerL4, 'horse.pdf');
-            imageUploadInputL4.value = null; selectedFileL4 = null; submitImageButtonL4.disabled = true;
-            level4Feedback.textContent = "Upload specified image."; level4Feedback.style.color = "#0f0";
+            showActiveScreen('level4');
+            embedPDF(pdfViewerContainerL4, 'The Evolution and Impact of Rocket Ships.pdf');
+            launchCodeInputL4.value = '';
+            launchCodeInputL4.disabled = false;
+            submitLaunchCodeButtonL4.disabled = false;
+            level4Feedback.textContent = "Locate the launch code in the document.";
+            level4Feedback.style.color = "#0f0";
         }
-        imageUploadInputL4.addEventListener('change', (e) => {
-            selectedFileL4 = e.target.files[0];
-            if (selectedFileL4) { level4Feedback.textContent = `Selected: ${selectedFileL4.name}. Verify Structure.`; level4Feedback.style.color = "#0f0"; submitImageButtonL4.disabled = false;
-            } else { submitImageButtonL4.disabled = true; level4Feedback.textContent = "No file selected."; level4Feedback.style.color = "#ff8c00"; }
-        });
-        submitImageButtonL4.addEventListener('click', verifyImageL4);
+        submitLaunchCodeButtonL4.addEventListener('click', checkLaunchCodeL4);
+        launchCodeInputL4.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkLaunchCodeL4(); });
 
-        async function computeAHashForGame(imageFileObject) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = 8; canvas.height = 8;
-                    ctx.drawImage(img, 0, 0, 8, 8);
-                    try {
-                        const imageData = ctx.getImageData(0, 0, 8, 8).data;
-                        let sum = 0; const pixels = [];
-                        for (let i = 0; i < imageData.length; i += 4) {
-                            const gray = 0.299 * imageData[i] + 0.587 * imageData[i + 1] + 0.114 * imageData[i + 2];
-                            pixels.push(gray); sum += gray;
-                        }
-                        const mean = sum / 64;
-                        let binaryHash = '';
-                        for (let i = 0; i < pixels.length; i++) {
-                            binaryHash += pixels[i] > mean ? '1' : '0';
-                        }
-                        let hexHash = '';
-                        for (let i = 0; i < binaryHash.length; i += 4) {
-                            const chunk = binaryHash.slice(i, i + 4);
-                            hexHash += parseInt(chunk, 2).toString(16);
-                        }
-                        resolve(hexHash.toUpperCase());
-                    } catch (e) { reject(new Error("Canvas getImageData failed for aHash. Error: " + e.message));}
-                };
-                img.onerror = () => reject(new Error("Image could not be loaded by Image object for aHash."));
-                const reader = new FileReader();
-                reader.onload = (event) => { img.src = event.target.result; };
-                reader.onerror = () => reject(new Error("FileReader could not read file for aHash."));
-                reader.readAsDataURL(imageFileObject);
-            });
-        }
-
-        async function verifyImageL4() {
-            if (!selectedFileL4) { level4Feedback.textContent = "No image selected."; level4Feedback.style.color = "#ff8c00"; return; }
-            level4Feedback.textContent = "Verifying Image Structure..."; level4Feedback.style.color = "#0f0"; submitImageButtonL4.disabled = true;
-            try {
-                const uploadedImageHexAHash = (await computeAHashForGame(selectedFileL4)).toUpperCase();
-                 console.log("Uploaded Hex aHash:", uploadedImageHexAHash); // For debugging
-                 console.log("Target 1:", targetImageAHashL4_Option1.toUpperCase());
-                 console.log("Target 2:", targetImageAHashL4_Option2.toUpperCase());
-                 console.log("Target 3:", targetImageAHashL4_Option3.toUpperCase());
-
-                if (uploadedImageHexAHash === targetImageAHashL4_Option1.toUpperCase() ||
-                    uploadedImageHexAHash === targetImageAHashL4_Option2.toUpperCase() ||
-                    uploadedImageHexAHash === targetImageAHashL4_Option3.toUpperCase() ) {
-                    level4Feedback.style.color = "#0f0"; level4Feedback.textContent = "IMAGE STRUCTURE VERIFIED. Accessing L5...";
-                    imageUploadInputL4.disabled = true; setTimeout(startLevel5, 2500);
-                } else {
-                    level4Feedback.style.color = "#f00"; level4Feedback.textContent = "Verification Failed. Incorrect image structure. Try again.";
-                    submitImageButtonL4.disabled = false; imageUploadInputL4.value = null; selectedFileL4 = null;
-                }
-            } catch (error) { console.error("Image aHash error:", error); level4Feedback.style.color = "#f00"; level4Feedback.textContent = "Error processing image: " + (error.message || "Unknown error") + ". Try JPG/PNG."; submitImageButtonL4.disabled = false; imageUploadInputL4.value = null; selectedFileL4 = null;}
+        function checkLaunchCodeL4() {
+            const enteredCode = launchCodeInputL4.value.trim();
+            if (enteredCode === atob(correctLaunchCodeL4_b64)) {
+                level4Feedback.style.color = "#0f0";
+                level4Feedback.textContent = "LAUNCH CODE VERIFIED. Accessing L5...";
+                launchCodeInputL4.disabled = true;
+                submitLaunchCodeButtonL4.disabled = true;
+                setTimeout(startLevel5, 2500);
+            } else if (enteredCode === "") {
+                level4Feedback.style.color = "#ff8c00";
+                level4Feedback.textContent = "No launch code entered.";
+            } else {
+                level4Feedback.style.color = "#f00";
+                level4Feedback.textContent = "Invalid Code. Re-verify your data.";
+                launchCodeInputL4.value = "";
+            }
         }
 
         // --- Level 5 Logic ---
         function startLevel5() {
             showActiveScreen('level5');
-            passportInputL5.value = ""; passportInputL5.disabled = false;
-            submitPassportL5.disabled = false;
-            level5Feedback.textContent = "Extract the passport MRZ line from Sheet 2.";
+            missionStatusInputL5.value = "";
+            missionStatusInputL5.disabled = false;
+            submitStatusButtonL5.disabled = false;
+            level5Feedback.textContent = "Find the mission status for Richard Anderson.";
             level5Feedback.style.color = "#0f0";
         }
-        submitPassportL5.addEventListener('click', checkPassportL5);
-        passportInputL5.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPassportL5(); });
-        function checkPassportL5() {
-            const enteredPassport = passportInputL5.value.trim();
-            const cleanedEnteredPassport = enteredPassport.replace(/\s+/g, '');
-            const cleanedCorrectPassport = correctPassportL5.replace(/\s+/g, '');
-            if (cleanedEnteredPassport === cleanedCorrectPassport) {
-                level5Feedback.style.color = "#0f0"; level5Feedback.textContent = "PASSPORT DATA CONFIRMED. ALL PROTOCOLS COMPLETE!";
-                passportInputL5.disabled = true; submitPassportL5.disabled = true;
+        submitStatusButtonL5.addEventListener('click', checkMissionStatusL5);
+        missionStatusInputL5.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkMissionStatusL5(); });
+        
+        function checkMissionStatusL5() {
+            const enteredStatus = missionStatusInputL5.value.trim();
+            if (enteredStatus.toLowerCase() === atob(correctMissionStatusL5_b64).toLowerCase()) {
+                level5Feedback.style.color = "#0f0";
+                level5Feedback.textContent = "STATUS CONFIRMED. ALL PROTOCOLS COMPLETE!";
+                missionStatusInputL5.disabled = true;
+                submitStatusButtonL5.disabled = true;
                 setTimeout(startGameComplete, 2500);
-            } else if (enteredPassport === "") { level5Feedback.style.color = "#ff8c00"; level5Feedback.textContent = "No passport data entered.";
-            } else { level5Feedback.style.color = "#f00"; level5Feedback.textContent = "Incorrect passport data. Re-verify your extraction."; passportInputL5.value = ""; }
+            } else if (enteredStatus === "") {
+                level5Feedback.style.color = "#ff8c00";
+                level5Feedback.textContent = "No status entered.";
+            } else {
+                level5Feedback.style.color = "#f00";
+                level5Feedback.textContent = "Incorrect status. Re-verify your extraction.";
+                missionStatusInputL5.value = "";
+            }
         }
 
         // --- Game Complete Logic ---
@@ -397,27 +482,27 @@
         }
         function launchFireworks() {
             const gameCompleteScreen = levelScreens['gameComplete'];
-            const numFireworks = 7 + Math.floor(Math.random() * 4); // More fireworks: 7-10 bursts
+            const numFireworks = 7 + Math.floor(Math.random() * 4);
             let baseDelay = 0;
             for (let i = 0; i < numFireworks; i++) {
                 setTimeout(() => createFireworkBurst(gameCompleteScreen), baseDelay);
-                baseDelay += 400 + Math.random() * 400; // Stagger bursts a bit more closely
+                baseDelay += 400 + Math.random() * 400;
             }
         }
         function createFireworkBurst(container) {
-            const numParticles = 60 + Math.floor(Math.random() * 60); // 60-120 particles
-            const burstX = Math.random() * 70 + 15; // % from left, more centered
-            const burstY = Math.random() * 40 + 15; // % from top, slightly higher
-            const colors = ['#FF0000', '#FFA500', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#FF00FF', '#FFFFFF', '#FF4500', '#DA70D6', '#7FFF00']; // More colors
+            const numParticles = 60 + Math.floor(Math.random() * 60);
+            const burstX = Math.random() * 70 + 15;
+            const burstY = Math.random() * 40 + 15;
+            const colors = ['#FF0000', '#FFA500', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#FF00FF', '#FFFFFF', '#FF4500', '#DA70D6', '#7FFF00'];
             for (let i = 0; i < numParticles; i++) {
                 const particle = document.createElement('div'); particle.classList.add('firework');
                 particle.style.left = `${burstX}%`; particle.style.top = `${burstY}%`;
                 particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 100 + 30; // Further spread
+                const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 100 + 30;
                 particle.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
                 particle.style.setProperty('--ty', `${Math.sin(angle) * distance}px`);
                 container.appendChild(particle);
-                setTimeout(() => { particle.remove(); }, 1000); // Animation duration
+                setTimeout(() => { particle.remove(); }, 1000);
             }
         }
 
