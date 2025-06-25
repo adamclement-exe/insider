@@ -332,7 +332,9 @@
             if (currentEnteredCode.toUpperCase() === atob(correctCodeL1_b64).toUpperCase()) {
                 keypadDisplay.textContent = "ACCESS"; keypadDisplay.style.color = "#0f0"; hatchElement.classList.add('open');
                 setTimeout(() => { startLevel2(); hatchElement.classList.remove('open'); clearInputL1(); }, 1500);
-            } else { keypadDisplay.textContent = "DENIED"; keypadDisplay.style.color = "#f00"; setTimeout(clearInputL1, 1000); }
+            } else { keypadDisplay.textContent = "DENIED"; keypadDisplay.style.color = "#f00"; setTimeout(clearInputL1, 1000);
+                   capturePacketButton.disabled = false;
+                   }
         }
         keypadInputButtons.forEach(b => { b.addEventListener('click', () => { const k = b.dataset.key; handleKeyPressL1(k); if (currentEnteredCode.length === atob(correctCodeL1_b64).length) checkCodeL1(); }); });
         clearButton.addEventListener('click', clearInputL1);
