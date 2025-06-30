@@ -237,6 +237,7 @@
         <h2>Objective: Identify Removed Personnel</h2>
         <p>Our intel suggests a last-minute crew change was made, but the public records were not updated. The secured spreadsheet contains the final flight roster.</p>
         <p>Cross-reference the final roster against the public crew announcement to identify the astronaut who was REMOVED from the mission.</p>
+        <div id="odf"></div>
         <div class="challenge-input-area">
             <label for="removed-astronaut-input">Who was removed from the final flight crew?</label>
             <div>
@@ -336,6 +337,13 @@
         let animationInProgress = false;
         let map; let userMarker;
         const xmlData = `<secure-access><level>5</level><restricted>true</restricted><uid>49</uid><base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64></secure-access>`.trim();
+
+        function init() {
+          var odfelement = document.getElementById("odf"),
+              odfcanvas = new odf.OdfCanvas(odfelement);
+          odfcanvas.load("crew-list-final-version.odt");
+        }
+        
 
         // --- CORE GAME LOGIC ---
 
@@ -571,6 +579,7 @@
         // --- LEVEL 6 ADDITIONS (LOGIC) ---
         function startLevel6() {
             showActiveScreen('level6');
+            window.setTimeout(init, 0);
             removedAstronautInputL6.value = "";
             removedAstronautInputL6.disabled = false;
             submitAstronautButtonL6.disabled = false;
