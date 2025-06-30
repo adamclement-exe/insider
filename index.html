@@ -297,8 +297,10 @@
         // Level 2 Obfuscated Coordinates
         const mission = "mars"; 
 
-        const obfLatB64   = "Hg8NChAVFhQ=";  
-        const obfLonB64   = "IQ4TBAcUEQ==" ; 
+        const obfLatB64 = "WFNcQ1pYQg==";
+        const obfLonB64   = "QFBcRFlURA==" ; 
+
+        
         
         const maxDistanceL2 = 10 * 1609.34;
         
@@ -440,9 +442,8 @@
         }
 
         async function performMapSearchL2() {
-            // DECODE THE COORDINATES AT RUNTIME
-            const decodedLat = parseFloat(xorDecodeFromB64(obfLatB64, mission));
-            const decodedLon = parseFloat(xorDecodeFromB64(obfLonB64, mission));
+            const decodedLat = parseFloat(xorDecodeFromB64(obfLatB64, xorKey));
+            const decodedLon = parseFloat(xorDecodeFromB64(obfLonB64, xorKey));
             const targetCoordsL2 = L.latLng(decodedLat, decodedLon);
             console.log("Decoded target coords:", decodedLat, decodedLon);
             
