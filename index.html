@@ -235,7 +235,7 @@
 
     <div class="popup-overlay" id="xml-popup-overlay"> <div class="popup-window"> <div class="popup-header"> <h2>Intercepted Network Traffic</h2> <button id="close-popup">×</button> </div> <div class="popup-content"> <pre id="xml-content-area"></pre> </div> </div> </div>
 
-          <script>
+           <script>
         // DOM Elements (No changes)
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
@@ -278,8 +278,7 @@
             return hashHex;
         }
 
-        // --- SECURE CONFIGURATION with HASHES ---
-        // Answers are converted to lowercase before hashing for case-insensitivity.
+        // SECURE CONFIGURATION with HASHES
         const correctCodeL1_hash = '42a9b3262422a5941566438d17f93557993444199a03893a404a558514194098'; // from "7864b"
         const correctCodeL1_length = 5;
         const targetCoordsL2 = L.latLng(51.367472, -1.153556);
@@ -292,14 +291,7 @@
         let animationInProgress = false;
         let map; let userMarker;
 
-        // The clue in this XML is still '7864B', which is fine. The code handles the case difference.
-        const xmlData = `
-        <secure-access>
-        <level>5</level>
-        <restricted>true</restricted>
-        <uid>49</uid>
-        <base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64>
-</secure-access>`.trim();
+        const xmlData = `<secure-access><level>5</level><restricted>true</restricted><uid>49</uid><base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64></secure-access>`.trim();
 
         function showActiveScreen(screenId) {
             animationInProgress = true;
@@ -333,34 +325,59 @@
         }
         
         function updateDisplayL1() { keypadDisplay.textContent = currentEnteredCode; }
-        // THIS FUNCTION MUST BE ASYNC
+        
         async function handleKeyPressL1(key) {
-            if (!animationInProgress && currentEnteredCode.length < correctCodeL1_length) {
+            if (animationInProgress) return; // Ignore key presses while an animation/check is running
+            if (currentEnteredCode.length < correctCodeL1_length) {
                 currentEnteredCode += key;
                 updateDisplayL1();
             }
-            // Check the code automatically when the correct length is reached
             if (currentEnteredCode.length === correctCodeL1_length) {
                 await checkCodeL1(); 
             }
         }
-        function clearInputL1() { if (!animationInProgress) { currentEnteredCode = ""; updateDisplayL1(); keypadDisplay.style.color = "#0f0"; } }
         
-        // THIS FUNCTION MUST BE ASYNC
+        function clearInputL1() { 
+            currentEnteredCode = ""; 
+            updateDisplayL1(); 
+            keypadDisplay.style.color = "#0f0"; 
+        }
+        
+        // --- THIS FUNCTION IS NOW FULLY ROBUST ---
         async function checkCodeL1() {
+            // 1. Lock the keypad to prevent race conditions
+            animationInProgress = true;
+            keypadInputButtons.forEach(b => b.disabled = true);
+            clearButton.disabled = true;
+
             const inputHash = await sha256(currentEnteredCode.toLowerCase());
 
             if (inputHash === correctCodeL1_hash) {
-                keypadDisplay.textContent = "ACCESS"; keypadDisplay.style.color = "#0f0"; hatchElement.classList.add('open');
-                setTimeout(() => { startLevel2(); hatchElement.classList.remove('open'); clearInputL1(); }, 1500);
+                keypadDisplay.textContent = "ACCESS"; 
+                keypadDisplay.style.color = "#0f0"; 
+                hatchElement.classList.add('open');
+                // We are moving to the next level, so we don't need to re-enable the keypad.
+                setTimeout(() => { 
+                    startLevel2(); 
+                    hatchElement.classList.remove('open'); 
+                    clearInputL1(); 
+                }, 1500);
             } else {
-                keypadDisplay.textContent = "DENIED"; keypadDisplay.style.color = "#f00"; setTimeout(clearInputL1, 1000);
-                capturePacketButton.disabled = false;
+                keypadDisplay.textContent = "DENIED"; 
+                keypadDisplay.style.color = "#f00"; 
+                // 2. After a delay, clear the input AND THEN re-enable the keypad
+                setTimeout(() => {
+                    clearInputL1();
+                    keypadInputButtons.forEach(b => b.disabled = false);
+                    clearButton.disabled = false;
+                    capturePacketButton.disabled = false; // Also re-enable this button
+                    animationInProgress = false; // Release the lock
+                }, 1000);
             }
         }
-        // Note: The event listener itself does not need to be async
+
         keypadInputButtons.forEach(b => { b.addEventListener('click', () => { const k = b.dataset.key; handleKeyPressL1(k); }); });
-        clearButton.addEventListener('click', clearInputL1);
+        clearButton.addEventListener('click', () => { if (!animationInProgress) clearInputL1(); });
         function showXmlPopup() { xmlContentArea.textContent = xmlData; xmlPopupOverlay.classList.add('visible'); }
         closePopupButton.addEventListener('click', () => { xmlPopupOverlay.classList.remove('visible'); });
         
@@ -377,14 +394,16 @@
                     setTimeout(() => { 
                         hatchElement.classList.remove('open'); 
                         clearInputL1(); 
-                        animationInProgress = false;
                         keypadInputButtons.forEach(b => b.disabled = false);
                         clearButton.disabled = false;
                         keypadDisplay.textContent = "";
+                        animationInProgress = false; // Release lock after intro animation
                     }, 3500);
                 }
             } type();
         }
+
+        // --- ALL OTHER LEVELS (UNCHANGED, BUT INCLUDED FOR COMPLETENESS) ---
 
         function startLevel2() {
             showActiveScreen('level2');
@@ -430,8 +449,6 @@
             level3Feedback.textContent = "Examine document."; level3Feedback.style.color = "#0f0";
         }
         submitNameButtonL3.addEventListener('click', checkNameL3); nameInputL3.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkNameL3(); });
-        
-        // THIS FUNCTION MUST BE ASYNC
         async function checkNameL3() {
             const enteredName = nameInputL3.value.trim();
             if (enteredName === "") {
@@ -454,8 +471,6 @@
         }
         submitLaunchCodeButtonL4.addEventListener('click', checkLaunchCodeL4);
         launchCodeInputL4.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkLaunchCodeL4(); });
-
-        // THIS FUNCTION MUST BE ASYNC
         async function checkLaunchCodeL4() {
             const enteredCode = launchCodeInputL4.value.trim();
             if (enteredCode === "") {
@@ -463,10 +478,12 @@
             }
             const inputHash = await sha256(enteredCode.toLowerCase());
             if (inputHash === correctLaunchCodeL4_hash) {
-                level4Feedback.style.color = "#0f0"; level4Feedback.textContent = "LAUNCH CODE VERIFIED. Accessing L5...";
+                level4Feedback.style.color = "#0f0";
+                level4Feedback.textContent = "LAUNCH CODE VERIFIED. Accessing L5...";
                 launchCodeInputL4.disabled = true; submitLaunchCodeButtonL4.disabled = true; setTimeout(startLevel5, 2500);
             } else {
-                level4Feedback.style.color = "#f00"; level4Feedback.textContent = "Invalid Code. Re-verify your data."; launchCodeInputL4.value = "";
+                level4Feedback.style.color = "#f00";
+                level4Feedback.textContent = "Invalid Code. Re-verify your data."; launchCodeInputL4.value = "";
             }
         }
 
@@ -477,8 +494,6 @@
         }
         submitStatusButtonL5.addEventListener('click', checkMissionStatusL5);
         missionStatusInputL5.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkMissionStatusL5(); });
-        
-        // THIS FUNCTION MUST BE ASYNC
         async function checkMissionStatusL5() {
             const enteredStatus = missionStatusInputL5.value.trim();
             if (enteredStatus === "") {
@@ -486,10 +501,12 @@
             }
             const inputHash = await sha256(enteredStatus.toLowerCase());
             if (inputHash === correctMissionStatusL5_hash) {
-                level5Feedback.style.color = "#0f0"; level5Feedback.textContent = "STATUS CONFIRMED. ALL PROTOCOLS COMPLETE!";
+                level5Feedback.style.color = "#0f0";
+                level5Feedback.textContent = "STATUS CONFIRMED. ALL PROTOCOLS COMPLETE!";
                 missionStatusInputL5.disabled = true; submitStatusButtonL5.disabled = true; setTimeout(startGameComplete, 2500);
             } else {
-                level5Feedback.style.color = "#f00"; level5Feedback.textContent = "Incorrect status. Re-verify your extraction."; missionStatusInputL5.value = "";
+                level5Feedback.style.color = "#f00";
+                level5Feedback.textContent = "Incorrect status. Re-verify your extraction."; missionStatusInputL5.value = "";
             }
         }
 
