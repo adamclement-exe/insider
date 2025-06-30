@@ -442,8 +442,8 @@
         }
 
         async function performMapSearchL2() {
-            const decodedLat = parseFloat(xorDecodeFromB64(obfLatB64, xorKey));
-            const decodedLon = parseFloat(xorDecodeFromB64(obfLonB64, xorKey));
+            const decodedLat = parseFloat(xorDecodeFromB64(obfLatB64, mission));
+            const decodedLon = parseFloat(xorDecodeFromB64(obfLonB64, mission));
             const targetCoordsL2 = L.latLng(decodedLat, decodedLon);
             console.log("Decoded target coords:", decodedLat, decodedLon);
             
