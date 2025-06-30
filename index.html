@@ -423,10 +423,15 @@
         }
         mapSearchButton.addEventListener('click', performMapSearchL2);
         mapSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performMapSearchL2(); });
+
+        
         async function performMapSearchL2() {
             // DECODE THE COORDINATES AT RUNTIME
             const decodedLat = parseFloat(xor_string(obfuscatedLat, xorKey));
             const decodedLon = parseFloat(xor_string(obfuscatedLon, xorKey));
+            console.log(decodedLat);
+            console.log(decodedLon);
+            
             const targetCoordsL2 = L.latLng(decodedLat, decodedLon);
 
             const query = mapSearchInput.value.trim();
