@@ -123,8 +123,8 @@
         #level2-content img { max-width: 90%; max-height: 300px; height: auto; margin-bottom: 20px; border: 3px solid #0f0; border-radius: 5px; background-color: #111; }
         #level2-content #map-container { height: 400px; width: 80%; max-width: 700px; margin: 20px auto; border: 2px solid #0f0; border-radius: 5px; }
 
-        #level5-content .download-link { display: inline-block; padding: 10px 20px; margin: 20px auto; background-color: #004400; color: #0f0; border: 1px solid #0f0; text-decoration: none; border-radius: 5px; }
-        #level5-content .download-link:hover { background-color: #006600; }
+        #level5-content .download-link, #level6-content .download-link { display: inline-block; padding: 10px 20px; margin: 20px auto; background-color: #004400; color: #0f0; border: 1px solid #0f0; text-decoration: none; border-radius: 5px; }
+        #level5-content .download-link:hover, #level6-content .download-link:hover { background-color: #006600; }
         
         #game-complete-content { text-align: center; color: #0f0; position: relative; width: 100%; height: 100vh; background-color: #111; }
         #game-complete-content h1 { font-size: 3em; margin-top: 30vh; }
@@ -142,6 +142,8 @@
             <p><strong>Level 3: Source Identification</strong> - Analyze a recovered document to identify its originator.</p>
             <p><strong>Level 4: Visual Data Extraction</strong> - Extract and verify a specific visual asset from within a provided document.</p>
             <p><strong>Level 5: Final Decryption</strong> - Retrieve critical operative data from a secured spreadsheet.</p>
+            <!-- LEVEL 6 DESCRIPTION ADDED -->
+            <p><strong>Level 6: Manifest Anomaly</strong> - Identify a last-minute change to the mission's crew manifest.</p>
         </div>
         <p>The fate of many depends on your success. Good luck, Agent.</p>
         <button id="start-game-button">Begin Challenge</button>
@@ -229,6 +231,22 @@
         </div>
     </div>
 
+    <!-- NEW LEVEL 6 HTML -->
+    <div id="level6-content" class="screen-container" style="display: none;">
+        <h1 class="level-title">Level 6: Crew Manifest Anomaly</h1>
+        <h2>Objective: Identify Removed Personnel</h2>
+        <p>Our intel suggests a last-minute crew change was made, but the public records were not updated. The secured spreadsheet contains the final flight roster.</p>
+        <p>Cross-reference the final roster against the public crew announcement to identify the astronaut who was REMOVED from the mission.</p>
+        <div class="challenge-input-area">
+            <label for="removed-astronaut-input">Who was removed from the final flight crew?</label>
+            <div>
+                <input type="text" id="removed-astronaut-input" placeholder="Enter full name">
+                <button id="submit-astronaut-button">Submit Name</button>
+            </div>
+            <p id="level6-feedback" class="feedback-text"></p>
+        </div>
+    </div>
+
     <div id="game-complete-content" class="screen-container" style="display: none;">
         <h1>MISSION ACCOMPLISHED!</h1> <p>Congratulations, Agent. You have successfully navigated all protocols.</p>
     </div>
@@ -249,7 +267,9 @@
             'title': document.getElementById('title-screen-content'),
             'level1': document.getElementById('level1-content'), 'level2': document.getElementById('level2-content'),
             'level3': document.getElementById('level3-content'), 'level4': document.getElementById('level4-content'),
-            'level5': document.getElementById('level5-content'), 'gameComplete': document.getElementById('game-complete-content')
+            'level5': document.getElementById('level5-content'), 
+            'level6': document.getElementById('level6-content'), // --- LEVEL 6 ADDITION ---
+            'gameComplete': document.getElementById('game-complete-content')
         };
         const startGameButton = document.getElementById('start-game-button');
         const mapSearchInput = document.getElementById('map-search-input');
@@ -268,6 +288,11 @@
         const missionStatusInputL5 = document.getElementById('mission-status-input');
         const submitStatusButtonL5 = document.getElementById('submit-status-button');
         const level5Feedback = document.getElementById('level5-feedback');
+
+        // --- LEVEL 6 ADDITIONS (DOM ELEMENTS) ---
+        const removedAstronautInputL6 = document.getElementById('removed-astronaut-input');
+        const submitAstronautButtonL6 = document.getElementById('submit-astronaut-button');
+        const level6Feedback = document.getElementById('level6-feedback');
 
         // --- UTILITY FUNCTIONS ---
 
@@ -294,20 +319,17 @@
         const correctCodeL1_hash = '0c17178592679c2fdf78ef43301d109902c1a70fe52c0e44971a0cf2390a7d2b'; 
         const correctCodeL1_length = 5;
         
-        // Level 2 Obfuscated Coordinates
         const mission = "mars"; 
-
         const obfLatB64 = "WFBcQFtWRkRf";
-        
-        const obfLonB64   = "QFBcQlhSR0Zb" ; 
-
-        
-        
+        const obfLonB64 = "QFBcQlhSR0Zb"; 
         const maxDistanceL2 = 10 * 1609.34;
         
         const correctNameL3_hash = '22c5e6277d26b325337896d1fedd2e538b3d8194d84598c0ca58d36c922c4119';
         const correctLaunchCodeL4_hash = '82079095814816ff63d25a366d88d95d5f2f0e0f8befad3df95f5398199fd589'; 
         const correctMissionStatusL5_hash = 'ffa63583dfa6706b87d284b86b0d693a161e4840aad2c5cf6b5d27c3b9621f7d';
+        
+        // --- LEVEL 6 ADDITION (ANSWER HASH) ---
+        const correctAstronautL6_hash = '338378b9c036c976122cb15676c394d9b78f1c69da53df450ba01ff549c0f7e5';
 
         // --- GLOBAL VARIABLES ---
         let currentEnteredCode = "";
@@ -429,8 +451,6 @@
         mapSearchButton.addEventListener('click', performMapSearchL2);
         mapSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performMapSearchL2(); });
 
-
-
         function xorDecodeFromB64(b64, key) {
           const raw = atob(b64);
           let out = "";
@@ -446,10 +466,6 @@
             const decodedLat = parseFloat(xorDecodeFromB64(obfLatB64, mission));
             const decodedLon = parseFloat(xorDecodeFromB64(obfLonB64, mission));
             const targetCoordsL2 = L.latLng(decodedLat, decodedLon);
-            console.log("Decoded target coords:", decodedLat, decodedLon);
-            
-
-
             const query = mapSearchInput.value.trim();
             if (!query) { mapFeedback.textContent = "Please enter a location."; mapFeedback.style.color = "#ff8c00"; return; }
             mapFeedback.textContent = `Scanning for "${query}"...`; mapFeedback.style.color = "#0f0"; mapSearchButton.disabled = true;
@@ -542,11 +558,46 @@
             const inputHash = await sha256(enteredStatus.toLowerCase());
             if (inputHash === correctMissionStatusL5_hash) {
                 level5Feedback.style.color = "#0f0";
-                level5Feedback.textContent = "STATUS CONFIRMED. ALL PROTOCOLS COMPLETE!";
-                missionStatusInputL5.disabled = true; submitStatusButtonL5.disabled = true; setTimeout(startGameComplete, 2500);
+                // --- MODIFIED TO GO TO LEVEL 6 ---
+                level5Feedback.textContent = "STATUS CONFIRMED. Anomaly detected... Accessing L6...";
+                missionStatusInputL5.disabled = true; submitStatusButtonL5.disabled = true; 
+                setTimeout(startLevel6, 2500);
             } else {
                 level5Feedback.style.color = "#f00";
                 level5Feedback.textContent = "Incorrect status. Re-verify your extraction."; missionStatusInputL5.value = "";
+            }
+        }
+
+        // --- LEVEL 6 ADDITIONS (LOGIC) ---
+        function startLevel6() {
+            showActiveScreen('level6');
+            removedAstronautInputL6.value = "";
+            removedAstronautInputL6.disabled = false;
+            submitAstronautButtonL6.disabled = false;
+            level6Feedback.textContent = "Identify the removed crew member.";
+            level6Feedback.style.color = "#0f0";
+        }
+        submitAstronautButtonL6.addEventListener('click', checkAnswerL6);
+        removedAstronautInputL6.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAnswerL6(); });
+
+        async function checkAnswerL6() {
+            const enteredName = removedAstronautInputL6.value.trim();
+            if (enteredName === "") {
+                level6Feedback.style.color = "#ff8c00";
+                level6Feedback.textContent = "No name entered.";
+                return;
+            }
+            const inputHash = await sha256(enteredName.toLowerCase());
+            if (inputHash === correctAstronautL6_hash) {
+                level6Feedback.style.color = "#0f0";
+                level6Feedback.textContent = "ANOMALY RESOLVED. MISSION SECURE!";
+                removedAstronautInputL6.disabled = true;
+                submitAstronautButtonL6.disabled = true;
+                setTimeout(startGameComplete, 2500); // Now we go to the final screen
+            } else {
+                level6Feedback.style.color = "#f00";
+                level6Feedback.textContent = "Incorrect. That crew member is on the final manifest.";
+                removedAstronautInputL6.value = "";
             }
         }
 
