@@ -163,10 +163,10 @@
             <p><strong>Level 1: Interception & Encoding</strong> - Bypass initial security by decoding intercepted traffic.</p>
             <p><strong>Level 2: Geo-Locate Asset</strong> - Pinpoint the general operating area of a high-value target using an image and map reconnaissance.</p>
             <p><strong>Level 3: Source Identification</strong> - Analyze a recovered document to identify its originator.</p>
-            <p><strong>Level 4: Visual Data Extraction</strong> - Extract and verify a specific visual asset from within a provided document.</p>
-            <p><strong>Level 5: Final Decryption</strong> - Retrieve critical operative data from a secured spreadsheet.</p>
+            <p><strong>Level 4: Hidden Data Extraction</strong> - Extract and verify a specific visual asset from within a provided document.</p>
+            <p><strong>Level 5: Security Bypass</strong> - Retrieve critical operative data from a secured spreadsheet.</p>
             <!-- LEVEL 6 DESCRIPTION ADDED -->
-            <p><strong>Level 6: Manifest Anomaly</strong> - Identify a last-minute change to the mission's crew manifest.</p>
+            <p><strong>Level 6: Missing Crew Member</strong> - Identify a last-minute change to the mission's crew manifest.</p>
         </div>
         <p>The fate of many depends on your success. Good luck, Agent.</p>
         <button id="start-game-button">Begin Challenge</button>
@@ -225,7 +225,7 @@
     </div>
 
     <div id="level4-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 4: Data Extraction</h1>
+        <h1 class="level-title">Level 4: Hidden Data Extraction</h1>
         <h2>Objective: Recover the Launch Code</h2>
         <p>Intelligence suggests the rocket's launch code is embedded or referenced within the provided document. Locate and extract this 6 character code.</p>
         <div id="pdf-viewer-container-l4"></div>
@@ -240,7 +240,7 @@
     </div>
 
     <div id="level5-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 5: Final Decryption</h1>
+        <h1 class="level-title">Level 5: Security Bypass</h1>
         <h2>Objective: Confirm Mission Status</h2>
         <p>The final piece of intel is locked within a secured spreadsheet. You must bypass its protection to retrieve the target data.</p>
         <a href="locked.xlsx" download class="download-link" id="download-locked-xlsx">Download Secured Document (locked.xlsx)</a>
@@ -256,7 +256,7 @@
 
     <!-- NEW LEVEL 6 HTML -->
     <div id="level6-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 6: Crew Manifest Anomaly</h1>
+        <h1 class="level-title">Level 6: Missing Crew Member</h1>
         <h2>Objective: Identify Removed Personnel</h2>
         <p>Our intel suggests a last-minute crew change was made, but the public records were not updated. The secured spreadsheet contains the final flight roster.</p>
         <p>Cross-reference the final roster against the public crew announcement to identify the astronaut who was REMOVED from the mission.</p>
