@@ -235,8 +235,8 @@
 
     <div class="popup-overlay" id="xml-popup-overlay"> <div class="popup-window"> <div class="popup-header"> <h2>Intercepted Network Traffic</h2> <button id="close-popup">×</button> </div> <div class="popup-content"> <pre id="xml-content-area"></pre> </div> </div> </div>
 
-        <script>
-        // DOM Elements (No changes needed here)
+          <script>
+        // DOM Elements (No changes)
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
         const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
@@ -269,21 +269,17 @@
         const submitStatusButtonL5 = document.getElementById('submit-status-button');
         const level5Feedback = document.getElementById('level5-feedback');
 
-        // --- NEW: Hashing Helper Function ---
-        // This function takes a string, hashes it using SHA-256, and returns the hash as a hex string.
-        // It's "async" because cryptographic operations are handled asynchronously by the browser.
+        // Hashing Helper Function
         async function sha256(str) {
-            // Encode the string into a byte array
             const textAsBuffer = new TextEncoder().encode(str);
-            // Use the SubtleCrypto API to hash the byte array
             const hashBuffer = await window.crypto.subtle.digest('SHA-256', textAsBuffer);
-            // Convert the resulting binary hash into a more readable hex string
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             return hashHex;
         }
 
-        // --- UPDATED CONFIGURATION with HASHES ---
+        // --- SECURE CONFIGURATION with HASHES ---
+        // Answers are converted to lowercase before hashing for case-insensitivity.
         const correctCodeL1_hash = '42a9b3262422a5941566438d17f93557993444199a03893a404a558514194098'; // from "7864b"
         const correctCodeL1_length = 5;
         const targetCoordsL2 = L.latLng(51.367472, -1.153556);
@@ -296,6 +292,7 @@
         let animationInProgress = false;
         let map; let userMarker;
 
+        // The clue in this XML is still '7864B', which is fine. The code handles the case difference.
         const xmlData = `
         <secure-access>
         <level>5</level>
@@ -335,23 +332,22 @@
             keypadDisplay.style.color = "#ff8c00";
         }
         
-        // --- UPDATED LEVEL 1 Logic ---
         function updateDisplayL1() { keypadDisplay.textContent = currentEnteredCode; }
-        // Note: this function now needs to be "async" to call the "await" on checkCodeL1
+        // THIS FUNCTION MUST BE ASYNC
         async function handleKeyPressL1(key) {
             if (!animationInProgress && currentEnteredCode.length < correctCodeL1_length) {
                 currentEnteredCode += key;
                 updateDisplayL1();
             }
+            // Check the code automatically when the correct length is reached
             if (currentEnteredCode.length === correctCodeL1_length) {
-                await checkCodeL1(); // Check the code once the correct length is reached
+                await checkCodeL1(); 
             }
         }
         function clearInputL1() { if (!animationInProgress) { currentEnteredCode = ""; updateDisplayL1(); keypadDisplay.style.color = "#0f0"; } }
         
-        // This function is now async to use the hashing function
+        // THIS FUNCTION MUST BE ASYNC
         async function checkCodeL1() {
-            // Hash the user's input (converted to lowercase for case-insensitivity)
             const inputHash = await sha256(currentEnteredCode.toLowerCase());
 
             if (inputHash === correctCodeL1_hash) {
@@ -362,6 +358,7 @@
                 capturePacketButton.disabled = false;
             }
         }
+        // Note: The event listener itself does not need to be async
         keypadInputButtons.forEach(b => { b.addEventListener('click', () => { const k = b.dataset.key; handleKeyPressL1(k); }); });
         clearButton.addEventListener('click', clearInputL1);
         function showXmlPopup() { xmlContentArea.textContent = xmlData; xmlPopupOverlay.classList.add('visible'); }
@@ -389,7 +386,6 @@
             } type();
         }
 
-        // --- LEVEL 2 (No cryptographic changes needed) ---
         function startLevel2() {
             showActiveScreen('level2');
             baseImage.onerror = () => { baseImage.alt = "Error: base.jpg"; console.error("base.jpg not found!"); }
@@ -428,7 +424,6 @@
             } catch (err) { console.error("L2 Map search error:", err); mapFeedback.style.color = "#f00"; mapFeedback.textContent = "Scan failed."; mapSearchButton.disabled = false; }
         }
 
-        // --- UPDATED LEVEL 3 Logic ---
         function startLevel3() {
             showActiveScreen('level3'); embedPDF(pdfViewerContainerL3, 'redacted.pdf');
             nameInputL3.value = ""; nameInputL3.disabled = false; submitNameButtonL3.disabled = false;
@@ -436,15 +431,13 @@
         }
         submitNameButtonL3.addEventListener('click', checkNameL3); nameInputL3.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkNameL3(); });
         
+        // THIS FUNCTION MUST BE ASYNC
         async function checkNameL3() {
             const enteredName = nameInputL3.value.trim();
             if (enteredName === "") {
-                level3Feedback.style.color = "#ff8c00"; level3Feedback.textContent = "No name entered.";
-                return;
+                level3Feedback.style.color = "#ff8c00"; level3Feedback.textContent = "No name entered."; return;
             }
-            
             const inputHash = await sha256(enteredName.toLowerCase());
-
             if (inputHash === correctNameL3_hash) {
                 level3Feedback.style.color = "#0f0"; level3Feedback.textContent = "IDENTITY CONFIRMED. Accessing L4...";
                 nameInputL3.disabled = true; submitNameButtonL3.disabled = true; setTimeout(startLevel4, 2500);
@@ -453,78 +446,53 @@
             }
         }
 
-        // --- UPDATED Level 4 Logic ---
         function startLevel4() {
             showActiveScreen('level4');
             embedPDF(pdfViewerContainerL4, 'The Evolution and Impact of Rocket Ships.pdf');
-            launchCodeInputL4.value = '';
-            launchCodeInputL4.disabled = false;
-            submitLaunchCodeButtonL4.disabled = false;
-            level4Feedback.textContent = "Locate the launch code in the document.";
-            level4Feedback.style.color = "#0f0";
+            launchCodeInputL4.value = ''; launchCodeInputL4.disabled = false; submitLaunchCodeButtonL4.disabled = false;
+            level4Feedback.textContent = "Locate the launch code in the document."; level4Feedback.style.color = "#0f0";
         }
         submitLaunchCodeButtonL4.addEventListener('click', checkLaunchCodeL4);
         launchCodeInputL4.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkLaunchCodeL4(); });
 
+        // THIS FUNCTION MUST BE ASYNC
         async function checkLaunchCodeL4() {
             const enteredCode = launchCodeInputL4.value.trim();
             if (enteredCode === "") {
-                level4Feedback.style.color = "#ff8c00";
-                level4Feedback.textContent = "No launch code entered.";
-                return;
+                level4Feedback.style.color = "#ff8c00"; level4Feedback.textContent = "No launch code entered."; return;
             }
-
             const inputHash = await sha256(enteredCode.toLowerCase());
-
             if (inputHash === correctLaunchCodeL4_hash) {
-                level4Feedback.style.color = "#0f0";
-                level4Feedback.textContent = "LAUNCH CODE VERIFIED. Accessing L5...";
-                launchCodeInputL4.disabled = true;
-                submitLaunchCodeButtonL4.disabled = true;
-                setTimeout(startLevel5, 2500);
+                level4Feedback.style.color = "#0f0"; level4Feedback.textContent = "LAUNCH CODE VERIFIED. Accessing L5...";
+                launchCodeInputL4.disabled = true; submitLaunchCodeButtonL4.disabled = true; setTimeout(startLevel5, 2500);
             } else {
-                level4Feedback.style.color = "#f00";
-                level4Feedback.textContent = "Invalid Code. Re-verify your data.";
-                launchCodeInputL4.value = "";
+                level4Feedback.style.color = "#f00"; level4Feedback.textContent = "Invalid Code. Re-verify your data."; launchCodeInputL4.value = "";
             }
         }
 
-        // --- UPDATED Level 5 Logic ---
         function startLevel5() {
             showActiveScreen('level5');
-            missionStatusInputL5.value = "";
-            missionStatusInputL5.disabled = false;
-            submitStatusButtonL5.disabled = false;
-            level5Feedback.textContent = "Find the mission status for Richard Anderson.";
-            level5Feedback.style.color = "#0f0";
+            missionStatusInputL5.value = ""; missionStatusInputL5.disabled = false; submitStatusButtonL5.disabled = false;
+            level5Feedback.textContent = "Find the mission status for Richard Anderson."; level5Feedback.style.color = "#0f0";
         }
         submitStatusButtonL5.addEventListener('click', checkMissionStatusL5);
         missionStatusInputL5.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkMissionStatusL5(); });
         
+        // THIS FUNCTION MUST BE ASYNC
         async function checkMissionStatusL5() {
             const enteredStatus = missionStatusInputL5.value.trim();
             if (enteredStatus === "") {
-                level5Feedback.style.color = "#ff8c00";
-                level5Feedback.textContent = "No status entered.";
-                return;
+                level5Feedback.style.color = "#ff8c00"; level5Feedback.textContent = "No status entered."; return;
             }
-
             const inputHash = await sha256(enteredStatus.toLowerCase());
-            
             if (inputHash === correctMissionStatusL5_hash) {
-                level5Feedback.style.color = "#0f0";
-                level5Feedback.textContent = "STATUS CONFIRMED. ALL PROTOCOLS COMPLETE!";
-                missionStatusInputL5.disabled = true;
-                submitStatusButtonL5.disabled = true;
-                setTimeout(startGameComplete, 2500);
+                level5Feedback.style.color = "#0f0"; level5Feedback.textContent = "STATUS CONFIRMED. ALL PROTOCOLS COMPLETE!";
+                missionStatusInputL5.disabled = true; submitStatusButtonL5.disabled = true; setTimeout(startGameComplete, 2500);
             } else {
-                level5Feedback.style.color = "#f00";
-                level5Feedback.textContent = "Incorrect status. Re-verify your extraction.";
-                missionStatusInputL5.value = "";
+                level5Feedback.style.color = "#f00"; level5Feedback.textContent = "Incorrect status. Re-verify your extraction."; missionStatusInputL5.value = "";
             }
         }
 
-        // --- Game Complete Logic (No changes needed) ---
         function startGameComplete() {
             showActiveScreen('gameComplete');
             launchFireworks();
