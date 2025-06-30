@@ -417,6 +417,7 @@
             mapFeedback.textContent = "Scan Area."; mapFeedback.style.color = "#0f0";
         }
         mapSearchButton.addEventListener('click', performMapSearchL2); mapSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performMapSearchL2(); });
+               
         async function performMapSearchL2() {
             const query = mapSearchInput.value.trim();
             if (!query) { mapFeedback.textContent = "Please enter a location."; mapFeedback.style.color = "#ff8c00"; return; }
@@ -451,12 +452,18 @@
             level3Feedback.textContent = "Examine document."; level3Feedback.style.color = "#0f0";
         }
         submitNameButtonL3.addEventListener('click', checkNameL3); nameInputL3.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkNameL3(); });
+
+               
         async function checkNameL3() {
             const enteredName = nameInputL3.value.trim();
             if (enteredName === "") {
                 level3Feedback.style.color = "#ff8c00"; level3Feedback.textContent = "No name entered."; return;
             }
             const inputHash = await sha256(enteredName.toLowerCase());
+            
+            console.log(inputHash);
+            console.log(correctNameL3_hash);
+            
             if (inputHash === correctNameL3_hash) {
                 level3Feedback.style.color = "#0f0"; level3Feedback.textContent = "IDENTITY CONFIRMED. Accessing L4...";
                 nameInputL3.disabled = true; submitNameButtonL3.disabled = true; setTimeout(startLevel4, 2500);
