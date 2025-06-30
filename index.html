@@ -283,7 +283,7 @@
         const correctCodeL1_length = 5;
         const targetCoordsL2 = L.latLng(51.367472, -1.153556);
         const maxDistanceL2 = 10 * 1609.34;
-        const correctNameL3_hash = '437e504c39f1c841364d08caf2518e3857d47155f8404285260195742510f279'; // from "eleanor harding"
+        const correctNameL3_hash = '22c5e6277d26b325337896d1fedd2e538b3d8194d84598c0ca58d36c922c4119'; // from "eleanor harding"
         const correctLaunchCodeL4_hash = 'ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c'; // from "754709"
         const correctMissionStatusL5_hash = '5558e8c8872f06793c3c13f63124803767a84b7245585093f640b8a3e757ba33'; // from "missing"
 
@@ -480,12 +480,18 @@
         }
         submitLaunchCodeButtonL4.addEventListener('click', checkLaunchCodeL4);
         launchCodeInputL4.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkLaunchCodeL4(); });
+
+               
         async function checkLaunchCodeL4() {
             const enteredCode = launchCodeInputL4.value.trim();
             if (enteredCode === "") {
                 level4Feedback.style.color = "#ff8c00"; level4Feedback.textContent = "No launch code entered."; return;
             }
             const inputHash = await sha256(enteredCode.toLowerCase());
+
+            console.log(inputHash);
+            console.log(correctLaunchCodeL4_hash);
+            
             if (inputHash === correctLaunchCodeL4_hash) {
                 level4Feedback.style.color = "#0f0";
                 level4Feedback.textContent = "LAUNCH CODE VERIFIED. Accessing L5...";
