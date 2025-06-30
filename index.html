@@ -23,6 +23,28 @@
             color: #eee; display: flex; flex-direction: column; align-items: center;
             justify-content: center; min-height: 100vh; margin: 0;
         }
+
+        #odf{
+            width: 90%;
+            max-width: 800px;
+            height: 500px; /* Increased height slightly for a better page ratio */
+            margin: 20px auto;
+            
+            background-color: #f8f8f8; /* A gentle off-white, less harsh than pure white */
+            color: #333; /* Dark gray text for readability */
+            border: 1px solid #ccc; /* A thin, light gray border */
+            border-radius: 3px; /* Slightly rounded corners */
+            
+            /* This is the key effect to make it look like a page on a surface */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); 
+            
+            padding: 2em; /* Creates the 'margins' inside the page */
+            box-sizing: border-box; /* Ensures padding is included in the element's total width/height */
+            
+            /* If the ODT content is longer than the container, a scrollbar will appear INSIDE it */
+            overflow-y: auto; 
+        }
+        
         .screen-container { /* Common container for all screens */
             width: 100%; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
