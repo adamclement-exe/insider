@@ -235,8 +235,8 @@
 
     <div class="popup-overlay" id="xml-popup-overlay"> <div class="popup-window"> <div class="popup-header"> <h2>Intercepted Network Traffic</h2> <button id="close-popup">×</button> </div> <div class="popup-content"> <pre id="xml-content-area"></pre> </div> </div> </div>
 
-    <script>
-        // DOM Elements
+        <script>
+        // DOM Elements (No changes needed here)
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
         const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
@@ -245,7 +245,6 @@
         const xmlPopupOverlay = document.getElementById('xml-popup-overlay');
         const xmlContentArea = document.getElementById('xml-content-area');
         const closePopupButton = document.getElementById('close-popup');
-
         const levelScreens = {
             'title': document.getElementById('title-screen-content'),
             'level1': document.getElementById('level1-content'), 'level2': document.getElementById('level2-content'),
@@ -253,34 +252,45 @@
             'level5': document.getElementById('level5-content'), 'gameComplete': document.getElementById('game-complete-content')
         };
         const startGameButton = document.getElementById('start-game-button');
-
         const mapSearchInput = document.getElementById('map-search-input');
         const mapSearchButton = document.getElementById('map-search-button');
         const mapContainer = document.getElementById('map-container');
         const mapFeedback = document.getElementById('map-feedback');
         const baseImage = document.getElementById('base-image');
-
         const pdfViewerContainerL3 = document.getElementById('pdf-viewer-container-l3');
         const nameInputL3 = document.getElementById('name-input');
         const submitNameButtonL3 = document.getElementById('submit-name-button');
         const level3Feedback = document.getElementById('level3-feedback');
-
         const pdfViewerContainerL4 = document.getElementById('pdf-viewer-container-l4');
         const launchCodeInputL4 = document.getElementById('launch-code-input');
         const submitLaunchCodeButtonL4 = document.getElementById('submit-launch-code-button');
         const level4Feedback = document.getElementById('level4-feedback');
-
         const missionStatusInputL5 = document.getElementById('mission-status-input');
         const submitStatusButtonL5 = document.getElementById('submit-status-button');
         const level5Feedback = document.getElementById('level5-feedback');
 
-        // --- CONFIGURATION ----
-        const correctCodeL1_b64 = 'Nzg2NEI=';                 
+        // --- NEW: Hashing Helper Function ---
+        // This function takes a string, hashes it using SHA-256, and returns the hash as a hex string.
+        // It's "async" because cryptographic operations are handled asynchronously by the browser.
+        async function sha256(str) {
+            // Encode the string into a byte array
+            const textAsBuffer = new TextEncoder().encode(str);
+            // Use the SubtleCrypto API to hash the byte array
+            const hashBuffer = await window.crypto.subtle.digest('SHA-256', textAsBuffer);
+            // Convert the resulting binary hash into a more readable hex string
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // --- UPDATED CONFIGURATION with HASHES ---
+        const correctCodeL1_hash = '42a9b3262422a5941566438d17f93557993444199a03893a404a558514194098'; // from "7864b"
+        const correctCodeL1_length = 5;
         const targetCoordsL2 = L.latLng(51.367472, -1.153556);
         const maxDistanceL2 = 10 * 1609.34;
-        const correctNameL3_b64 = 'RWxlYW5vciBIYXJkaW5n';   
-        const correctLaunchCodeL4_b64 = 'NzU0NzA5';         
-        const correctMissionStatusL5_b64 = 'TWlzc2luZw==';  
+        const correctNameL3_hash = '437e504c39f1c841364d08caf2518e3857d47155f8404285260195742510f279'; // from "eleanor harding"
+        const correctLaunchCodeL4_hash = 'ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c'; // from "754709"
+        const correctMissionStatusL5_hash = '5558e8c8872f06793c3c13f63124803767a84b7245585093f640b8a3e757ba33'; // from "missing"
 
         let currentEnteredCode = "";
         let animationInProgress = false;
@@ -324,19 +334,35 @@
             keypadDisplay.textContent = "LOCKED";
             keypadDisplay.style.color = "#ff8c00";
         }
-
+        
+        // --- UPDATED LEVEL 1 Logic ---
         function updateDisplayL1() { keypadDisplay.textContent = currentEnteredCode; }
-        function handleKeyPressL1(key) { if (!animationInProgress && currentEnteredCode.length < atob(correctCodeL1_b64).length) { currentEnteredCode += key; updateDisplayL1(); } }
+        // Note: this function now needs to be "async" to call the "await" on checkCodeL1
+        async function handleKeyPressL1(key) {
+            if (!animationInProgress && currentEnteredCode.length < correctCodeL1_length) {
+                currentEnteredCode += key;
+                updateDisplayL1();
+            }
+            if (currentEnteredCode.length === correctCodeL1_length) {
+                await checkCodeL1(); // Check the code once the correct length is reached
+            }
+        }
         function clearInputL1() { if (!animationInProgress) { currentEnteredCode = ""; updateDisplayL1(); keypadDisplay.style.color = "#0f0"; } }
-        function checkCodeL1() {
-            if (currentEnteredCode.toUpperCase() === atob(correctCodeL1_b64).toUpperCase()) {
+        
+        // This function is now async to use the hashing function
+        async function checkCodeL1() {
+            // Hash the user's input (converted to lowercase for case-insensitivity)
+            const inputHash = await sha256(currentEnteredCode.toLowerCase());
+
+            if (inputHash === correctCodeL1_hash) {
                 keypadDisplay.textContent = "ACCESS"; keypadDisplay.style.color = "#0f0"; hatchElement.classList.add('open');
                 setTimeout(() => { startLevel2(); hatchElement.classList.remove('open'); clearInputL1(); }, 1500);
-            } else { keypadDisplay.textContent = "DENIED"; keypadDisplay.style.color = "#f00"; setTimeout(clearInputL1, 1000);
-                   capturePacketButton.disabled = false;
-                   }
+            } else {
+                keypadDisplay.textContent = "DENIED"; keypadDisplay.style.color = "#f00"; setTimeout(clearInputL1, 1000);
+                capturePacketButton.disabled = false;
+            }
         }
-        keypadInputButtons.forEach(b => { b.addEventListener('click', () => { const k = b.dataset.key; handleKeyPressL1(k); if (currentEnteredCode.length === atob(correctCodeL1_b64).length) checkCodeL1(); }); });
+        keypadInputButtons.forEach(b => { b.addEventListener('click', () => { const k = b.dataset.key; handleKeyPressL1(k); }); });
         clearButton.addEventListener('click', clearInputL1);
         function showXmlPopup() { xmlContentArea.textContent = xmlData; xmlPopupOverlay.classList.add('visible'); }
         closePopupButton.addEventListener('click', () => { xmlPopupOverlay.classList.remove('visible'); });
@@ -363,6 +389,7 @@
             } type();
         }
 
+        // --- LEVEL 2 (No cryptographic changes needed) ---
         function startLevel2() {
             showActiveScreen('level2');
             baseImage.onerror = () => { baseImage.alt = "Error: base.jpg"; console.error("base.jpg not found!"); }
@@ -401,22 +428,32 @@
             } catch (err) { console.error("L2 Map search error:", err); mapFeedback.style.color = "#f00"; mapFeedback.textContent = "Scan failed."; mapSearchButton.disabled = false; }
         }
 
+        // --- UPDATED LEVEL 3 Logic ---
         function startLevel3() {
             showActiveScreen('level3'); embedPDF(pdfViewerContainerL3, 'redacted.pdf');
             nameInputL3.value = ""; nameInputL3.disabled = false; submitNameButtonL3.disabled = false;
             level3Feedback.textContent = "Examine document."; level3Feedback.style.color = "#0f0";
         }
         submitNameButtonL3.addEventListener('click', checkNameL3); nameInputL3.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkNameL3(); });
-        function checkNameL3() {
+        
+        async function checkNameL3() {
             const enteredName = nameInputL3.value.trim();
-            if (enteredName.toLowerCase() === atob(correctNameL3_b64).toLowerCase()) {
+            if (enteredName === "") {
+                level3Feedback.style.color = "#ff8c00"; level3Feedback.textContent = "No name entered.";
+                return;
+            }
+            
+            const inputHash = await sha256(enteredName.toLowerCase());
+
+            if (inputHash === correctNameL3_hash) {
                 level3Feedback.style.color = "#0f0"; level3Feedback.textContent = "IDENTITY CONFIRMED. Accessing L4...";
                 nameInputL3.disabled = true; submitNameButtonL3.disabled = true; setTimeout(startLevel4, 2500);
-            } else if (enteredName === "") { level3Feedback.style.color = "#ff8c00"; level3Feedback.textContent = "No name entered.";
-            } else { level3Feedback.style.color = "#f00"; level3Feedback.textContent = "Incorrect. Subject unidentified."; nameInputL3.value = ""; }
+            } else {
+                level3Feedback.style.color = "#f00"; level3Feedback.textContent = "Incorrect. Subject unidentified."; nameInputL3.value = "";
+            }
         }
 
-        // --- Level 4 Logic ---
+        // --- UPDATED Level 4 Logic ---
         function startLevel4() {
             showActiveScreen('level4');
             embedPDF(pdfViewerContainerL4, 'The Evolution and Impact of Rocket Ships.pdf');
@@ -429,17 +466,22 @@
         submitLaunchCodeButtonL4.addEventListener('click', checkLaunchCodeL4);
         launchCodeInputL4.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkLaunchCodeL4(); });
 
-        function checkLaunchCodeL4() {
+        async function checkLaunchCodeL4() {
             const enteredCode = launchCodeInputL4.value.trim();
-            if (enteredCode === atob(correctLaunchCodeL4_b64)) {
+            if (enteredCode === "") {
+                level4Feedback.style.color = "#ff8c00";
+                level4Feedback.textContent = "No launch code entered.";
+                return;
+            }
+
+            const inputHash = await sha256(enteredCode.toLowerCase());
+
+            if (inputHash === correctLaunchCodeL4_hash) {
                 level4Feedback.style.color = "#0f0";
                 level4Feedback.textContent = "LAUNCH CODE VERIFIED. Accessing L5...";
                 launchCodeInputL4.disabled = true;
                 submitLaunchCodeButtonL4.disabled = true;
                 setTimeout(startLevel5, 2500);
-            } else if (enteredCode === "") {
-                level4Feedback.style.color = "#ff8c00";
-                level4Feedback.textContent = "No launch code entered.";
             } else {
                 level4Feedback.style.color = "#f00";
                 level4Feedback.textContent = "Invalid Code. Re-verify your data.";
@@ -447,7 +489,7 @@
             }
         }
 
-        // --- Level 5 Logic ---
+        // --- UPDATED Level 5 Logic ---
         function startLevel5() {
             showActiveScreen('level5');
             missionStatusInputL5.value = "";
@@ -459,17 +501,22 @@
         submitStatusButtonL5.addEventListener('click', checkMissionStatusL5);
         missionStatusInputL5.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkMissionStatusL5(); });
         
-        function checkMissionStatusL5() {
+        async function checkMissionStatusL5() {
             const enteredStatus = missionStatusInputL5.value.trim();
-            if (enteredStatus.toLowerCase() === atob(correctMissionStatusL5_b64).toLowerCase()) {
+            if (enteredStatus === "") {
+                level5Feedback.style.color = "#ff8c00";
+                level5Feedback.textContent = "No status entered.";
+                return;
+            }
+
+            const inputHash = await sha256(enteredStatus.toLowerCase());
+            
+            if (inputHash === correctMissionStatusL5_hash) {
                 level5Feedback.style.color = "#0f0";
                 level5Feedback.textContent = "STATUS CONFIRMED. ALL PROTOCOLS COMPLETE!";
                 missionStatusInputL5.disabled = true;
                 submitStatusButtonL5.disabled = true;
                 setTimeout(startGameComplete, 2500);
-            } else if (enteredStatus === "") {
-                level5Feedback.style.color = "#ff8c00";
-                level5Feedback.textContent = "No status entered.";
             } else {
                 level5Feedback.style.color = "#f00";
                 level5Feedback.textContent = "Incorrect status. Re-verify your extraction.";
@@ -477,7 +524,7 @@
             }
         }
 
-        // --- Game Complete Logic ---
+        // --- Game Complete Logic (No changes needed) ---
         function startGameComplete() {
             showActiveScreen('gameComplete');
             launchFireworks();
