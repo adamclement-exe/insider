@@ -296,8 +296,11 @@
         
         // Level 2 Obfuscated Coordinates
         const xorKey = "mars"; 
-        const obfuscatedLat = "?;$9<=>=8"; 
-        const obfuscatedLon = "';$;?9??<"; 
+
+        const xorKey      = "mars";
+        const obfLatB64   = "Hg8NChAVFhQ=";  
+        const obfLonB64   = "IQ4TBAcUEQ==" ; 
+        
         const maxDistanceL2 = 10 * 1609.34;
         
         const correctNameL3_hash = '22c5e6277d26b325337896d1fedd2e538b3d8194d84598c0ca58d36c922c4119';
@@ -424,37 +427,27 @@
         mapSearchButton.addEventListener('click', performMapSearchL2);
         mapSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performMapSearchL2(); });
 
-        function xor_string(s, key) {
-          let out = '';
-          for (let i = 0; i < s.length; i++) {
-            const c = s.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-            out += String.fromCharCode(c);
+
+
+        function xorDecodeFromB64(b64, key) {
+          const raw = atob(b64);
+          let out = "";
+          for (let i = 0; i < raw.length; i++) {
+            out += String.fromCharCode(
+              raw.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+            );
           }
-          return out;
+          return out.trim();
         }
 
         async function performMapSearchL2() {
             // DECODE THE COORDINATES AT RUNTIME
-            //const decodedLat = parseFloat(xor_string(obfuscatedLat, xorKey));
-           // const decodedLon = parseFloat(xor_string(obfuscatedLon, xorKey));
-            //console.log(decodedLat);
-            //console.log(decodedLon);
-
-            
-            const rawLat = xor_string(obfuscatedLat, xorKey);
-            const rawLon = xor_string(obfuscatedLon, xorKey);
-            
-            // Inspect
-            console.log('rawLat:', JSON.stringify(rawLat));
-            console.log('rawLon:', JSON.stringify(rawLon));
-            
-            // Clean and parse
-            const decodedLat = parseFloat(rawLat.replace(/\0/g, '').trim());
-            const decodedLon = parseFloat(rawLon.replace(/\0/g, '').trim());
-            
-            console.log(decodedLat, decodedLon);
-            
+            const decodedLat = parseFloat(xorDecodeFromB64(obfLatB64, xorKey));
+            const decodedLon = parseFloat(xorDecodeFromB64(obfLonB64, xorKey));
             const targetCoordsL2 = L.latLng(decodedLat, decodedLon);
+            console.log("Decoded target coords:", decodedLat, decodedLon);
+            
+
 
             const query = mapSearchInput.value.trim();
             if (!query) { mapFeedback.textContent = "Please enter a location."; mapFeedback.style.color = "#ff8c00"; return; }
