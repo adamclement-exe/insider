@@ -351,6 +351,8 @@
             clearButton.disabled = true;
 
             const inputHash = await sha256(currentEnteredCode.toLowerCase());
+            console.log(inputHash);
+            console.log(correctCodeL1_hash);
 
             if (inputHash === correctCodeL1_hash) {
                 keypadDisplay.textContent = "ACCESS"; 
