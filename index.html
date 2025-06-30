@@ -235,8 +235,8 @@
 
     <div class="popup-overlay" id="xml-popup-overlay"> <div class="popup-window"> <div class="popup-header"> <h2>Intercepted Network Traffic</h2> <button id="close-popup">×</button> </div> <div class="popup-content"> <pre id="xml-content-area"></pre> </div> </div> </div>
 
-           <script>
-        // DOM Elements (No changes)
+    <script>
+        // DOM Elements
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
         const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
@@ -269,6 +269,8 @@
         const submitStatusButtonL5 = document.getElementById('submit-status-button');
         const level5Feedback = document.getElementById('level5-feedback');
 
+        // --- UTILITY FUNCTIONS ---
+
         // Hashing Helper Function
         async function sha256(str) {
             const textAsBuffer = new TextEncoder().encode(str);
@@ -278,20 +280,37 @@
             return hashHex;
         }
 
-        // SECURE CONFIGURATION with HASHES
-        const correctCodeL1_hash = '0c17178592679c2fdf78ef43301d109902c1a70fe52c0e44971a0cf2390a7d2b'; // from "7864b"
-        const correctCodeL1_length = 5;
-        const targetCoordsL2 = L.latLng(51.367472, -1.153556);
-        const maxDistanceL2 = 10 * 1609.34;
-        const correctNameL3_hash = '22c5e6277d26b325337896d1fedd2e538b3d8194d84598c0ca58d36c922c4119'; // from "eleanor harding"
-        const correctLaunchCodeL4_hash = '82079095814816ff63d25a366d88d95d5f2f0e0f8befad3df95f5398199fd589'; // from "754709"
-        const correctMissionStatusL5_hash = '5558e8c8872f06793c3c13f63124803767a84b7245585093f640b8a3e757ba33'; // from "missing"
+        // XOR Obfuscation Helper Function (for encoding/decoding strings)
+        function xor_string(str, key) {
+            let result = "";
+            for (let i = 0; i < str.length; i++) {
+                const charCode = str.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                result += String.fromCharCode(charCode);
+            }
+            return result;
+        }
 
+        // --- SECURE CONFIGURATION with HASHES & OBFUSCATION ---
+        const correctCodeL1_hash = '0c17178592679c2fdf78ef43301d109902c1a70fe52c0e44971a0cf2390a7d2b'; 
+        const correctCodeL1_length = 5;
+        
+        // Level 2 Obfuscated Coordinates
+        const xorKey = "mars"; 
+        const obfuscatedLat = "\u0006\u0012E\u0017\u0007\u0015F\u0015\u0003\u0013E"; 
+        const obfuscatedLon = "\u001e\u0012E\u0010\u0004\u0014B\u0014\u0004\u0014F"; 
+        const maxDistanceL2 = 10 * 1609.34;
+        
+        const correctNameL3_hash = '22c5e6277d26b325337896d1fedd2e538b3d8194d84598c0ca58d36c922c4119';
+        const correctLaunchCodeL4_hash = '82079095814816ff63d25a366d88d95d5f2f0e0f8befad3df95f5398199fd589'; 
+        const correctMissionStatusL5_hash = 'ffa63583dfa6706b87d284b86b0d693a161e4840aad2c5cf6b5d27c3b9621f7d';
+
+        // --- GLOBAL VARIABLES ---
         let currentEnteredCode = "";
         let animationInProgress = false;
         let map; let userMarker;
-
         const xmlData = `<secure-access><level>5</level><restricted>true</restricted><uid>49</uid><base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64></secure-access>`.trim();
+
+        // --- CORE GAME LOGIC ---
 
         function showActiveScreen(screenId) {
             animationInProgress = true;
@@ -315,6 +334,7 @@
         startGameButton.addEventListener('click', () => { initLevel1(); });
         capturePacketButton.addEventListener('click', playIntroAnimation);
 
+        // --- LEVEL 1 LOGIC ---
         function initLevel1() {
             showActiveScreen('level1');
             keypadInputButtons.forEach(b => b.disabled = true);
@@ -323,11 +343,9 @@
             keypadDisplay.textContent = "LOCKED";
             keypadDisplay.style.color = "#ff8c00";
         }
-        
         function updateDisplayL1() { keypadDisplay.textContent = currentEnteredCode; }
-        
         async function handleKeyPressL1(key) {
-            if (animationInProgress) return; // Ignore key presses while an animation/check is running
+            if (animationInProgress) return;
             if (currentEnteredCode.length < correctCodeL1_length) {
                 currentEnteredCode += key;
                 updateDisplayL1();
@@ -336,29 +354,20 @@
                 await checkCodeL1(); 
             }
         }
-        
         function clearInputL1() { 
             currentEnteredCode = ""; 
             updateDisplayL1(); 
             keypadDisplay.style.color = "#0f0"; 
         }
-        
-        // --- THIS FUNCTION IS NOW FULLY ROBUST ---
         async function checkCodeL1() {
-            // 1. Lock the keypad to prevent race conditions
             animationInProgress = true;
             keypadInputButtons.forEach(b => b.disabled = true);
             clearButton.disabled = true;
-
             const inputHash = await sha256(currentEnteredCode.toLowerCase());
-            console.log(inputHash);
-            console.log(correctCodeL1_hash);
-
             if (inputHash === correctCodeL1_hash) {
                 keypadDisplay.textContent = "ACCESS"; 
                 keypadDisplay.style.color = "#0f0"; 
                 hatchElement.classList.add('open');
-                // We are moving to the next level, so we don't need to re-enable the keypad.
                 setTimeout(() => { 
                     startLevel2(); 
                     hatchElement.classList.remove('open'); 
@@ -367,22 +376,19 @@
             } else {
                 keypadDisplay.textContent = "DENIED"; 
                 keypadDisplay.style.color = "#f00"; 
-                // 2. After a delay, clear the input AND THEN re-enable the keypad
                 setTimeout(() => {
                     clearInputL1();
                     keypadInputButtons.forEach(b => b.disabled = false);
                     clearButton.disabled = false;
-                    capturePacketButton.disabled = false; // Also re-enable this button
-                    animationInProgress = false; // Release the lock
+                    capturePacketButton.disabled = false;
+                    animationInProgress = false;
                 }, 1000);
             }
         }
-
         keypadInputButtons.forEach(b => { b.addEventListener('click', () => { const k = b.dataset.key; handleKeyPressL1(k); }); });
         clearButton.addEventListener('click', () => { if (!animationInProgress) clearInputL1(); });
         function showXmlPopup() { xmlContentArea.textContent = xmlData; xmlPopupOverlay.classList.add('visible'); }
         closePopupButton.addEventListener('click', () => { xmlPopupOverlay.classList.remove('visible'); });
-        
         function playIntroAnimation() {
             animationInProgress = true;
             capturePacketButton.disabled = true;
@@ -399,14 +405,13 @@
                         keypadInputButtons.forEach(b => b.disabled = false);
                         clearButton.disabled = false;
                         keypadDisplay.textContent = "";
-                        animationInProgress = false; // Release lock after intro animation
+                        animationInProgress = false;
                     }, 3500);
                 }
             } type();
         }
 
-        // --- ALL OTHER LEVELS (UNCHANGED, BUT INCLUDED FOR COMPLETENESS) ---
-
+        // --- LEVEL 2 LOGIC ---
         function startLevel2() {
             showActiveScreen('level2');
             baseImage.onerror = () => { baseImage.alt = "Error: base.jpg"; console.error("base.jpg not found!"); }
@@ -416,9 +421,14 @@
             else { map.invalidateSize(); map.setView([52.5, -1.5], 6); if (userMarker) map.removeLayer(userMarker); }
             mapFeedback.textContent = "Scan Area."; mapFeedback.style.color = "#0f0";
         }
-        mapSearchButton.addEventListener('click', performMapSearchL2); mapSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performMapSearchL2(); });
-               
+        mapSearchButton.addEventListener('click', performMapSearchL2);
+        mapSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performMapSearchL2(); });
         async function performMapSearchL2() {
+            // DECODE THE COORDINATES AT RUNTIME
+            const decodedLat = parseFloat(xor_string(obfuscatedLat, xorKey));
+            const decodedLon = parseFloat(xor_string(obfuscatedLon, xorKey));
+            const targetCoordsL2 = L.latLng(decodedLat, decodedLon);
+
             const query = mapSearchInput.value.trim();
             if (!query) { mapFeedback.textContent = "Please enter a location."; mapFeedback.style.color = "#ff8c00"; return; }
             mapFeedback.textContent = `Scanning for "${query}"...`; mapFeedback.style.color = "#0f0"; mapSearchButton.disabled = true;
@@ -446,24 +456,20 @@
             } catch (err) { console.error("L2 Map search error:", err); mapFeedback.style.color = "#f00"; mapFeedback.textContent = "Scan failed."; mapSearchButton.disabled = false; }
         }
 
+        // --- LEVEL 3 LOGIC ---
         function startLevel3() {
             showActiveScreen('level3'); embedPDF(pdfViewerContainerL3, 'redacted.pdf');
             nameInputL3.value = ""; nameInputL3.disabled = false; submitNameButtonL3.disabled = false;
             level3Feedback.textContent = "Examine document."; level3Feedback.style.color = "#0f0";
         }
-        submitNameButtonL3.addEventListener('click', checkNameL3); nameInputL3.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkNameL3(); });
-
-               
+        submitNameButtonL3.addEventListener('click', checkNameL3);
+        nameInputL3.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkNameL3(); });
         async function checkNameL3() {
             const enteredName = nameInputL3.value.trim();
             if (enteredName === "") {
                 level3Feedback.style.color = "#ff8c00"; level3Feedback.textContent = "No name entered."; return;
             }
             const inputHash = await sha256(enteredName.toLowerCase());
-            
-            console.log(inputHash);
-            console.log(correctNameL3_hash);
-            
             if (inputHash === correctNameL3_hash) {
                 level3Feedback.style.color = "#0f0"; level3Feedback.textContent = "IDENTITY CONFIRMED. Accessing L4...";
                 nameInputL3.disabled = true; submitNameButtonL3.disabled = true; setTimeout(startLevel4, 2500);
@@ -472,6 +478,7 @@
             }
         }
 
+        // --- LEVEL 4 LOGIC ---
         function startLevel4() {
             showActiveScreen('level4');
             embedPDF(pdfViewerContainerL4, 'The Evolution and Impact of Rocket Ships.pdf');
@@ -480,48 +487,38 @@
         }
         submitLaunchCodeButtonL4.addEventListener('click', checkLaunchCodeL4);
         launchCodeInputL4.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkLaunchCodeL4(); });
-
-               
         async function checkLaunchCodeL4() {
             const enteredCode = launchCodeInputL4.value.trim();
             if (enteredCode === "") {
                 level4Feedback.style.color = "#ff8c00"; level4Feedback.textContent = "No launch code entered."; return;
             }
             const inputHash = await sha256(enteredCode.toLowerCase());
-
-            console.log(inputHash);
-            console.log(correctLaunchCodeL4_hash);
-            
             if (inputHash === correctLaunchCodeL4_hash) {
                 level4Feedback.style.color = "#0f0";
                 level4Feedback.textContent = "LAUNCH CODE VERIFIED. Accessing L5...";
                 launchCodeInputL4.disabled = true; submitLaunchCodeButtonL4.disabled = true; setTimeout(startLevel5, 2500);
             } else {
                 level4Feedback.style.color = "#f00";
-                level4Feedback.textContent = "Invalid Code. Re-verify your data."; launchCodeInputL4.value = "";
+                level4Feedback.textContent = "Invalid Code. Re-verify your data.";
+                launchCodeInputL4.value = "";
             }
         }
 
+        // --- LEVEL 5 LOGIC ---
         function startLevel5() {
             showActiveScreen('level5');
             missionStatusInputL5.value = ""; missionStatusInputL5.disabled = false; submitStatusButtonL5.disabled = false;
-            level5Feedback.textContent = "Find the mission status for Richard Anderson."; level5Feedback.style.color = "#0f0";
+            level5Feedback.textContent = "Find the mission status for Richard Anderson.";
+            level5Feedback.style.color = "#0f0";
         }
         submitStatusButtonL5.addEventListener('click', checkMissionStatusL5);
         missionStatusInputL5.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkMissionStatusL5(); });
-
-               
         async function checkMissionStatusL5() {
             const enteredStatus = missionStatusInputL5.value.trim();
             if (enteredStatus === "") {
                 level5Feedback.style.color = "#ff8c00"; level5Feedback.textContent = "No status entered."; return;
             }
             const inputHash = await sha256(enteredStatus.toLowerCase());
-
-            
-            console.log(inputHash);
-            console.log(correctMissionStatusL5_hash);
-            
             if (inputHash === correctMissionStatusL5_hash) {
                 level5Feedback.style.color = "#0f0";
                 level5Feedback.textContent = "STATUS CONFIRMED. ALL PROTOCOLS COMPLETE!";
@@ -532,6 +529,7 @@
             }
         }
 
+        // --- GAME COMPLETE LOGIC ---
         function startGameComplete() {
             showActiveScreen('gameComplete');
             launchFireworks();
@@ -562,6 +560,7 @@
             }
         }
 
+        // Initialize the first screen on load
         window.addEventListener('load', () => { showActiveScreen('title'); });
     </script>
 </body>
