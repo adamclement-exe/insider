@@ -180,7 +180,7 @@
         <p>The intercepted image points to the location of Mission Control. We need to confirm its general operating area.</p>
         <p>Use the map to find a location that matches our intelligence parameters (within a 10-mile radius of the suspected launch command zone).</p>
         <div class="challenge-input-area">
-            <input type="text" id="map-search-input" placeholder="e.g., City, Town, Region">
+            <input autocomplete="off" type="text" id="map-search-input" placeholder="e.g., City, Town, Region">
             <button id="map-search-button">Scan Area</button>
         </div>
         <div id="map-container"></div>
@@ -195,7 +195,7 @@
         <div class="challenge-input-area">
             <label for="name-input">We need to find out who sent this letter, what is their full name?</label>
             <div>
-                <input type="text" id="name-input" placeholder="Enter full name">
+                <input autocomplete="off" type="text" id="name-input" placeholder="Enter full name">
                 <button id="submit-name-button">Submit Name</button>
             </div>
             <p id="level3-feedback" class="feedback-text"></p>
@@ -210,7 +210,7 @@
         <div class="challenge-input-area">
             <label for="launch-code-input">Enter the 6-character launch code:</label>
             <div>
-                <input type="text" id="launch-code-input" placeholder="Enter launch code" maxlength="6">
+                <input autocomplete="off" type="text" id="launch-code-input" placeholder="Enter launch code" maxlength="6">
                 <button id="submit-launch-code-button">Verify Code</button>
             </div>
             <p id="level4-feedback" class="feedback-text"></p>
@@ -225,7 +225,7 @@
         <div class="challenge-input-area">
             <label for="mission-status-input">Find the mission status of the mission captained by "Richard Anderson". The data is on Sheet 2.</label>
             <div>
-                <input type="text" id="mission-status-input" placeholder="Enter mission status">
+                <input autocomplete="off" type="text" id="mission-status-input" placeholder="Enter mission status">
                 <button id="submit-status-button">Submit Data</button>
             </div>
             <p id="level5-feedback" class="feedback-text"></p>
@@ -244,7 +244,7 @@
         <div class="challenge-input-area">
             <label for="removed-astronaut-input">Who was removed from the final flight crew?</label>
             <div>
-                <input type="text" id="removed-astronaut-input" placeholder="Enter full name">
+                <input autocomplete="off" type="text" id="removed-astronaut-input" placeholder="Enter full name">
                 <button id="submit-astronaut-button">Submit Name</button>
             </div>
             <p id="level6-feedback" class="feedback-text"></p>
@@ -333,7 +333,7 @@
         const correctMissionStatusL5_hash = 'ffa63583dfa6706b87d284b86b0d693a161e4840aad2c5cf6b5d27c3b9621f7d';
         
         // --- LEVEL 6 ADDITION (ANSWER HASH) ---
-        const correctAstronautL6_hash = '338378b9c036c976122cb15676c394d9b78f1c69da53df450ba01ff549c0f7e5';
+        const correctAstronautL6_hash = 'c6e646cc23ab8493c5f63446e5987254532807915b5af39979f170c73277aa2b';
 
         // --- GLOBAL VARIABLES ---
         let currentEnteredCode = "";
@@ -599,6 +599,7 @@
                 level6Feedback.textContent = "No name entered.";
                 return;
             }
+            
             const inputHash = await sha256(enteredName.toLowerCase());
             if (inputHash === correctAstronautL6_hash) {
                 level6Feedback.style.color = "#0f0";
