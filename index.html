@@ -424,13 +424,35 @@
         mapSearchButton.addEventListener('click', performMapSearchL2);
         mapSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performMapSearchL2(); });
 
-        
+        function xor_string(s, key) {
+          let out = '';
+          for (let i = 0; i < s.length; i++) {
+            const c = s.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+            out += String.fromCharCode(c);
+          }
+          return out;
+        }
+
         async function performMapSearchL2() {
             // DECODE THE COORDINATES AT RUNTIME
-            const decodedLat = parseFloat(xor_string(obfuscatedLat, xorKey));
-            const decodedLon = parseFloat(xor_string(obfuscatedLon, xorKey));
-            console.log(decodedLat);
-            console.log(decodedLon);
+            //const decodedLat = parseFloat(xor_string(obfuscatedLat, xorKey));
+           // const decodedLon = parseFloat(xor_string(obfuscatedLon, xorKey));
+            //console.log(decodedLat);
+            //console.log(decodedLon);
+
+            
+            const rawLat = xor_string(obfuscatedLat, xorKey);
+            const rawLon = xor_string(obfuscatedLon, xorKey);
+            
+            // Inspect
+            console.log('rawLat:', JSON.stringify(rawLat));
+            console.log('rawLon:', JSON.stringify(rawLon));
+            
+            // Clean and parse
+            const decodedLat = parseFloat(rawLat.replace(/\0/g, '').trim());
+            const decodedLon = parseFloat(rawLon.replace(/\0/g, '').trim());
+            
+            console.log(decodedLat, decodedLon);
             
             const targetCoordsL2 = L.latLng(decodedLat, decodedLon);
 
