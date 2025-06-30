@@ -157,23 +157,22 @@
 </head>
 <body>
     <div id="title-screen-content" class="screen-container">
-        <h1 class="screen-title">Hacking the Mission to Mars</h1>
+        <h1 class="screen-title">Operation: Red Horizon</h1>
         <div class="mission-brief">
-            <p><strong>Your Mission:</strong></p>
-            <p><strong>Level 1: Interception & Encoding</strong> - Bypass initial security by decoding intercepted traffic.</p>
-            <p><strong>Level 2: Geo-Locate Asset</strong> - Pinpoint the general operating area of a high-value target using an image and map reconnaissance.</p>
-            <p><strong>Level 3: Source Identification</strong> - Analyze a recovered document to identify its originator.</p>
-            <p><strong>Level 4: Hidden Data Extraction</strong> - Extract and verify a specific visual asset from within a provided document.</p>
-            <p><strong>Level 5: Security Bypass</strong> - Retrieve critical operative data from a secured spreadsheet.</p>
-            <!-- LEVEL 6 DESCRIPTION ADDED -->
-            <p><strong>Level 6: Missing Crew Member</strong> - Identify a last-minute change to the mission's crew manifest.</p>
+            <p><strong>Agent, your mission is critical:</strong></p>
+            <p><strong>Level 1: Breach the Rocket's Defenses</strong> - Infiltrate the launch system by decoding a captured data packet to unlock the rocket's access hatch.</p>
+            <p><strong>Level 2: Track the Command Center</strong> - Use a covertly obtained image to locate the enemy's Mission Control within a critical 10-mile radius.</p>
+            <p><strong>Level 3: Unmask the Mastermind</strong> - Decrypt a redacted document to reveal the identity of the mission's commander.</p>
+            <p><strong>Level 4: Crack the Launch Code</strong> - Extract a hidden 6-character code from a classified document to gain control of the rocket's launch sequence.</p>
+            <p><strong>Level 5: Access Secure Intelligence</strong> - Break into a protected spreadsheet to uncover the mission status of a key operative.</p>
+            <p><strong>Level 6: Uncover the Betrayal</strong> - Investigate a last-minute crew change to identify the astronaut removed from the mission roster.</p>
         </div>
-        <p>The fate of many depends on your success. Good luck, Agent.</p>
-        <button id="start-game-button">Begin Challenge</button>
+        <p>The success of this operation hinges on your skills. Humanity's future is in your hands, Agent.</p>
+        <button id="start-game-button">Initiate Mission</button>
     </div>
 
     <div id="level1-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 1: Gain Access to the Rocket</h1>
+        <h1 class="level-title">Level 1: Breach the Rocket's Defenses</h1>
         <div class="scene">
             <div class="rocket-body">
                 <div class="hatch" id="the-hatch">
@@ -196,11 +195,11 @@
     </div>
 
     <div id="level2-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 2: Geo-Locate Asset</h1>
+        <h1 class="level-title">Level 2: Track the Command Center</h1>
         <img src="base.jpg" alt="Intercepted Image - Potential Target" id="base-image">
-        <h2>Objective: Pinpoint Mission Control</h2>
-        <p>The intercepted image points to the location of Mission Control. We need to confirm its general operating area.</p>
-        <p>Use the map to find a location that matches our intelligence parameters (within a 10-mile radius of the suspected launch command zone).</p>
+        <h2>Objective: Locate the Hidden Base</h2>
+        <p>An intercepted image reveals clues to the location of the enemy's Mission Control. Your task is to pinpoint its coordinates.</p>
+        <p>Use the map to identify a location within a 10-mile radius of the suspected launch command zone.</p>
         <div class="challenge-input-area">
             <input autocomplete="off" type="text" id="map-search-input" placeholder="e.g., City, Town, Region">
             <button id="map-search-button">Scan Area</button>
@@ -210,12 +209,12 @@
     </div>
 
     <div id="level3-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 3: Source Identification</h1>
+        <h1 class="level-title">Level 3: Unmask the Mastermind</h1>
         <h2>Objective: Identify the Mission Commander</h2>
-        <p>A heavily redacted document has been recovered. Analyze it carefully to determine its source.</p>
+        <p>A classified, heavily redacted document holds the key to the identity of the mission's orchestrator. Scrutinize it to uncover their full name.</p>
         <div id="pdf-viewer-container-l3"></div>
         <div class="challenge-input-area">
-            <label for="name-input">We need to find out who sent this letter, what is their full name?</label>
+            <label for="name-input">Who is the commander behind this mission? Enter their full name:</label>
             <div>
                 <input autocomplete="off" type="text" id="name-input" placeholder="Enter full name">
                 <button id="submit-name-button">Submit Name</button>
@@ -225,9 +224,9 @@
     </div>
 
     <div id="level4-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 4: Hidden Data Extraction</h1>
-        <h2>Objective: Recover the Launch Code</h2>
-        <p>Intelligence suggests the rocket's launch code is embedded or referenced within the provided document. Locate and extract this 6 character code.</p>
+        <h1 class="level-title">Level 4: Crack the Launch Code</h1>
+        <h2>Objective: Secure the Launch Sequence</h2>
+        <p>Intelligence indicates a 6-character launch code is concealed within a technical document. Find and extract it to take control of the rocket.</p>
         <div id="pdf-viewer-container-l4"></div>
         <div class="challenge-input-area">
             <label for="launch-code-input">Enter the 6-character launch code:</label>
@@ -240,12 +239,12 @@
     </div>
 
     <div id="level5-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 5: Security Bypass</h1>
-        <h2>Objective: Confirm Mission Status</h2>
-        <p>The final piece of intel is locked within a secured spreadsheet. You must bypass its protection to retrieve the target data.</p>
+        <h1 class="level-title">Level 5: Access Secure Intelligence</h1>
+        <h2>Objective: Retrieve Critical Data</h2>
+        <p>A locked spreadsheet contains vital mission details. Break its security to extract the mission status for operative Richard Anderson, located on Sheet 2.</p>
         <a href="locked.xlsx" download class="download-link" id="download-locked-xlsx">Download Secured Document (locked.xlsx)</a>
         <div class="challenge-input-area">
-            <label for="mission-status-input">Find the mission status of the mission captained by "Richard Anderson". The data is on Sheet 2.</label>
+            <label for="mission-status-input">What is the mission status for Richard Anderson?</label>
             <div>
                 <input autocomplete="off" type="text" id="mission-status-input" placeholder="Enter mission status">
                 <button id="submit-status-button">Submit Data</button>
@@ -254,14 +253,12 @@
         </div>
     </div>
 
-    <!-- NEW LEVEL 6 HTML -->
     <div id="level6-content" class="screen-container" style="display: none;">
-        <h1 class="level-title">Level 6: Missing Crew Member</h1>
-        <h2>Objective: Identify Removed Personnel</h2>
-        <p>Our intel suggests a last-minute crew change was made, but the public was not informed - someone was forced to leave the mission! The file shown below contains the final flight roster.</p>
-        <p>Find the missing profile card to identify the astronaut who was REMOVED from the mission.</p>
+        <h1 class="level-title">Level 6: Uncover the Betrayal</h1>
+        <h2>Objective: Identify the Omitted Astronaut</h2>
+        <p>A covert source reveals a last-minute crew change was made in secret. Someone was removed from the mission roster without public knowledge.</p>
+        <p>Examine the final flight roster to identify the astronaut who was excluded from the mission.</p>
         <a href="crew-list-final-version.odt">Download .odt file</a>
-        
         <div id="odf"></div>
         <div class="challenge-input-area">
             <label for="removed-astronaut-input">Who was removed from the final flight crew?</label>
@@ -274,10 +271,21 @@
     </div>
 
     <div id="game-complete-content" class="screen-container" style="display: none;">
-        <h1>MISSION ACCOMPLISHED!</h1> <p>Congratulations, Agent. You have successfully navigated all protocols.</p>
+        <h1>MISSION ACCOMPLISHED!</h1>
+        <p>Congratulations, Agent. You have thwarted the threat and secured the mission.</p>
     </div>
 
-    <div class="popup-overlay" id="xml-popup-overlay"> <div class="popup-window"> <div class="popup-header"> <h2>Intercepted Network Traffic</h2> <button id="close-popup">×</button> </div> <div class="popup-content"> <pre id="xml-content-area"></pre> </div> </div> </div>
+    <div class="popup-overlay" id="xml-popup-overlay">
+        <div class="popup-window">
+            <div class="popup-header">
+                <h2>Intercepted Network Traffic</h2>
+                <button id="close-popup">×</button>
+            </div>
+            <div class="popup-content">
+                <pre id="xml-content-area"></pre>
+            </div>
+        </div>
+    </div>
 
     <script>
         // DOM Elements
@@ -294,7 +302,7 @@
             'level1': document.getElementById('level1-content'), 'level2': document.getElementById('level2-content'),
             'level3': document.getElementById('level3-content'), 'level4': document.getElementById('level4-content'),
             'level5': document.getElementById('level5-content'), 
-            'level6': document.getElementById('level6-content'), // --- LEVEL 6 ADDITION ---
+            'level6': document.getElementById('level6-content'),
             'gameComplete': document.getElementById('game-complete-content')
         };
         const startGameButton = document.getElementById('start-game-button');
@@ -315,7 +323,6 @@
         const submitStatusButtonL5 = document.getElementById('submit-status-button');
         const level5Feedback = document.getElementById('level5-feedback');
 
-        // --- LEVEL 6 ADDITIONS (DOM ELEMENTS) ---
         const removedAstronautInputL6 = document.getElementById('removed-astronaut-input');
         const submitAstronautButtonL6 = document.getElementById('submit-astronaut-button');
         const level6Feedback = document.getElementById('level6-feedback');
@@ -354,7 +361,6 @@
         const correctLaunchCodeL4_hash = '82079095814816ff63d25a366d88d95d5f2f0e0f8befad3df95f5398199fd589'; 
         const correctMissionStatusL5_hash = 'ffa63583dfa6706b87d284b86b0d693a161e4840aad2c5cf6b5d27c3b9621f7d';
         
-        // --- LEVEL 6 ADDITION (ANSWER HASH) ---
         const correctAstronautL6_hash = 'c6e646cc23ab8493c5f63446e5987254532807915b5af39979f170c73277aa2b';
 
         // --- GLOBAL VARIABLES ---
@@ -591,7 +597,6 @@
             const inputHash = await sha256(enteredStatus.toLowerCase());
             if (inputHash === correctMissionStatusL5_hash) {
                 level5Feedback.style.color = "#0f0";
-                // --- MODIFIED TO GO TO LEVEL 6 ---
                 level5Feedback.textContent = "STATUS CONFIRMED. Anomaly detected... Accessing L6...";
                 missionStatusInputL5.disabled = true; submitStatusButtonL5.disabled = true; 
                 setTimeout(startLevel6, 2500);
@@ -628,7 +633,7 @@
                 level6Feedback.textContent = "ANOMALY RESOLVED. MISSION SECURE!";
                 removedAstronautInputL6.disabled = true;
                 submitAstronautButtonL6.disabled = true;
-                setTimeout(startGameComplete, 2500); // Now we go to the final screen
+                setTimeout(startGameComplete, 2500);
             } else {
                 level6Feedback.style.color = "#f00";
                 level6Feedback.textContent = "Incorrect. That crew member is on the final manifest.";
