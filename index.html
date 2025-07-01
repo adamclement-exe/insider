@@ -79,6 +79,41 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 5px 0 10px rgba(0,0,0,0.2);
             perspective: 1000px;
         }
+
+        /* make sure rocket-body is the positioning context */
+        .rocket-body {
+          position: relative; 
+          /* keep it above the frame */
+          z-index: 1; 
+        }
+        
+        /* the hole / doorframe behind the hatch */
+        .rocket-body::before {
+          content: "";
+          position: absolute;
+          /* same size as the hatch so it’s 100% covered when closed */
+          width: 160px;
+          height: 160px;
+          /* center it on the hatch location */
+          top: calc(50% - 80px);
+          left: calc(50% - 80px);
+          /* the “empty” background */
+          background-color: #111;
+          /* frame edge around the hole */
+          border: 5px solid #333;
+          border-radius: 4px;
+          /* inset shadow for depth */
+          box-shadow: inset 0 0 15px rgba(0,0,0,0.7);
+          /* sit behind the hatch */
+          z-index: 0;
+        }
+        
+        /* ensure the hatch itself remains above the frame */
+        .hatch {
+          position: relative;
+          z-index: 2;
+        }
+
         .hatch {
             width: 160px; height: 160px;
             background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
