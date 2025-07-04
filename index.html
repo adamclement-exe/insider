@@ -285,7 +285,7 @@
     <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
     
     <script>
-class EmlReader {
+        class EmlReader {
     constructor(arrayBuffer) {
         this.rawEml = new TextDecoder('utf-8', { fatal: false }).decode(arrayBuffer);
         this.headers = {};
@@ -299,10 +299,13 @@ class EmlReader {
 
         const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html');
         const images = doc.querySelectorAll('img');
+        console.log('Number of images found:', images.length); // Debug image count
 
         images.forEach(img => {
             const src = img.getAttribute('src') || '';
+            console.log('Image src:', src.substring(0, 50) + (src.length > 50 ? '...' : '')); // Log src
             if (!src || src.trim() === '' || (src.startsWith('data:image') && !this.isValidBase64Image(src))) {
+                console.log('Replacing image with red X due to invalid src');
                 const redXImg = doc.createElement('img');
                 redXImg.setAttribute('src', 'https://adamclement-exe.github.io/insider/broken.png');
                 redXImg.setAttribute('alt', 'Broken Image');
@@ -310,6 +313,7 @@ class EmlReader {
                 img.replaceWith(redXImg);
             } else {
                 const altText = img.getAttribute('alt') || '';
+                console.log('Keeping image with alt:', altText);
                 if (altText) {
                     const textNode = doc.createTextNode(altText);
                     img.replaceWith(textNode);
@@ -319,16 +323,20 @@ class EmlReader {
             }
         });
 
-        return doc.querySelector('div').innerHTML.trim() || '';
+        const result = doc.querySelector('div').innerHTML.trim() || '';
+        console.log('Stripped HTML result:', result.substring(0, 200) + (result.length > 200 ? '...' : '')); // Log result
+        return result;
     }
 
     isValidBase64Image(src) {
         try {
             const base64Data = src.split(',')[1];
             if (!base64Data) return false;
-            atob(base64Data.substring(0, 50));
+            // Check a larger portion to catch truncated base64
+            atob(base64Data.substring(0, 100));
             return true;
         } catch (e) {
+            console.log('Base64 validation failed:', e.message);
             return false;
         }
     }
@@ -339,7 +347,7 @@ class EmlReader {
         if (headerEndIndex !== -1) {
             const headerBlock = this.rawEml.substring(0, headerEndIndex);
             bodyBlock = this.rawEml.substring(headerEndIndex + 2);
-            console.log('Raw body block:', bodyBlock.substring(0, 200)); // Log first 200 chars of body
+            console.log('Raw body block:', bodyBlock.substring(0, 200));
 
             const headerLines = headerBlock.split(/\r?\n(?![ \t])/);
             headerLines.forEach(line => {
@@ -445,7 +453,6 @@ class EmlReader {
         return { name: null, address: headerValue.trim(), text: headerValue };
     }
 }
-
 
         
         const hatchElement = document.getElementById('the-hatch');
