@@ -533,7 +533,7 @@
             showActiveScreen('level7');
             keywordInputL7.value = ""; keywordInputL7.disabled = false; submitKeywordButtonL7.disabled = false;
             level7Feedback.textContent = "Analyze the commander's email for the keyword.";
-            switchTab('preview');
+            //('preview');
             try {
                 const response = await fetch('commander.eml');
                 if (!response.ok) throw new Error('commander.eml not found');
@@ -557,8 +557,8 @@
             previewPane.classList.toggle('active', isActive);
             sourcePane.classList.toggle('active', !isActive);
         }
-        previewTab.addEventListener('click', () => switchTab('preview'));
-        sourceTab.addEventListener('click', () => switchTab('source'));
+        previewTab.addEventListener('click', () => ('preview'));
+        sourceTab.addEventListener('click', () => ('source'));
         submitKeywordButtonL7.addEventListener('click', checkAnswerL7);
         async function checkAnswerL7() {
             const inputHash = await sha256(keywordInputL7.value.trim().toLowerCase());
