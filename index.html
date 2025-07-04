@@ -608,12 +608,14 @@
                 
                 const buffer = await response.arrayBuffer();
                 const rawEmlText = new TextDecoder().decode(buffer);
-                
+
+                /*
                 const highlightedHtml = rawEmlText.replace(
                     'TURINGMACHINE',
                     '<span class="highlighted-clue">TURINGMACHINE</span>'
                 );
                 emailRawSource.innerHTML = highlightedHtml;
+                */
                 
                 const reader = new EmlReader(buffer);
                 
