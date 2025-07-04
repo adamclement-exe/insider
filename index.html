@@ -114,25 +114,118 @@
 <body>
     
     <div id="title-screen-content" class="screen-container">
-        <!-- ... Title Screen HTML ... -->
+        <h1 class="screen-title">Exeter College Taster Day - Insider Threats</h1>
+        <div class="mission-brief">
+            <p><strong>Agent, your mission is critical:</strong></p>
+            <p><strong>Level 1: Breach the Rocket's Defenses</strong> - Infiltrate the launch system by decoding a captured data packet to unlock the rocket's access hatch.</p>
+            <p><strong>Level 2: Track the Command Center</strong> - Use a covertly obtained image to locate the enemy's Mission Control within a critical 10-mile radius.</p>
+            <p><strong>Level 3: Unmask the Mastermind</strong> - Decrypt a redacted document to reveal the identity of the mission's commander.</p>
+            <p><strong>Level 4: Crack the Launch Code</strong> - Extract a hidden 6-character code from a classified document to gain control of the rocket's launch sequence.</p>
+            <p><strong>Level 5: Access Secure Intelligence</strong> - Break into a protected spreadsheet to uncover the mission status of a key operative.</p>
+            <p><strong>Level 6: Uncover the Missing Person</strong> - Investigate a last-minute crew change to identify the astronaut removed from the mission roster.</p>
+            <p><strong>Level 7: Decrypt the Final Directive</strong> - An intercepted email from the commander contains a final, encrypted keyword. Analyze the email's raw source to uncover the hidden term.</p>
+        </div>
+        <p>The success of this operation hinges on your skills. Humanity's future is in your hands, Agent.</p>
+        <button id="start-game-button">Initiate Mission</button>
     </div>
+
     <div id="level1-content" class="screen-container" style="display: none;">
-        <!-- ... Level 1 HTML ... -->
+        <h1 class="level-title">Level 1: Breach the Rocket's Defenses</h1>
+        <div class="scene">
+            <div class="rocket-body">
+                <div class="hatch" id="the-hatch">
+                    <div class="hatch-window"></div>
+                    <div class="hatch-handle"></div>
+                </div>
+            </div>
+            <div class="keypad-area">
+                <button id="capture-packet-button">Capture Packet</button>
+                <div id="keypad-display"></div>
+                <div class="keypad-grid">
+                    <button data-key="1">1</button> <button data-key="2">2</button> <button data-key="3">3</button>
+                    <button data-key="4">4</button> <button data-key="5">5</button> <button data-key="6">6</button>
+                    <button data-key="7">7</button> <button data-key="8">8</button> <button data-key="9">9</button>
+                    <button data-key="A">A</button> <button data-key="0">0</button> <button data-key="B">B</button>
+                    <button id="keypad-clear-button" style="grid-column: span 3;">CLR</button>
+                </div>
+            </div>
+        </div>
     </div>
+
     <div id="level2-content" class="screen-container" style="display: none;">
-        <!-- ... Level 2 HTML ... -->
+        <h1 class="level-title">Level 2: Track the Command Center</h1>
+        <img src="base.jpg" alt="Intercepted Image - Potential Target" id="base-image">
+        <h2>Objective: Locate the Hidden Base</h2>
+        <p>An intercepted image reveals clues to the location of the enemy's Mission Control. Your task is to pinpoint its coordinates.</p>
+        <p>Use the map to identify a location within a 10-mile radius of the suspected launch command zone.</p>
+        <div class="challenge-input-area">
+            <input autocomplete="off" type="text" id="map-search-input" placeholder="e.g., City, Town, Region">
+            <button id="map-search-button">Scan Area</button>
+        </div>
+        <div id="map-container"></div>
+        <p id="map-feedback" class="feedback-text"></p>
     </div>
+
     <div id="level3-content" class="screen-container" style="display: none;">
-        <!-- ... Level 3 HTML ... -->
+        <h1 class="level-title">Level 3: Unmask the Mastermind</h1>
+        <h2>Objective: Identify the Mission Commander</h2>
+        <p>A classified, heavily redacted document holds the key to the identity of the mission's orchestrator. Scrutinize it to uncover their full name.</p>
+        <div id="pdf-viewer-container-l3"></div>
+        <div class="challenge-input-area">
+            <label for="name-input">Who is the commander behind this mission? Enter their full name:</label>
+            <div>
+                <input autocomplete="off" type="text" id="name-input" placeholder="Enter full name">
+                <button id="submit-name-button">Submit Name</button>
+            </div>
+            <p id="level3-feedback" class="feedback-text"></p>
+        </div>
     </div>
+
     <div id="level4-content" class="screen-container" style="display: none;">
-        <!-- ... Level 4 HTML ... -->
+        <h1 class="level-title">Level 4: Crack the Launch Code</h1>
+        <h2>Objective: Secure the Launch Sequence</h2>
+        <p>Intelligence indicates a 6-character launch code is concealed within a technical document. Find and extract it to take control of the rocket.</p>
+        <div id="pdf-viewer-container-l4"></div>
+        <div class="challenge-input-area">
+            <label for="launch-code-input">Enter the 6-character launch code:</label>
+            <div>
+                <input autocomplete="off" type="text" id="launch-code-input" placeholder="Enter launch code" maxlength="6">
+                <button id="submit-launch-code-button">Verify Code</button>
+            </div>
+            <p id="level4-feedback" class="feedback-text"></p>
+        </div>
     </div>
+
     <div id="level5-content" class="screen-container" style="display: none;">
-        <!-- ... Level 5 HTML ... -->
+        <h1 class="level-title">Level 5: Access Secure Intelligence</h1>
+        <h2>Objective: Retrieve Critical Data</h2>
+        <p>A locked spreadsheet contains vital mission details. Break its security to extract the mission status for operative Richard Anderson, located on Sheet 2.</p>
+        <a href="locked.xlsx" download class="download-link">Download Secured Document (locked.xlsx)</a>
+        <div class="challenge-input-area">
+            <label for="mission-status-input">What is the mission status for Richard Anderson?</label>
+            <div>
+                <input autocomplete="off" type="text" id="mission-status-input" placeholder="Enter mission status">
+                <button id="submit-status-button">Submit Data</button>
+            </div>
+            <p id="level5-feedback" class="feedback-text"></p>
+        </div>
     </div>
+
     <div id="level6-content" class="screen-container" style="display: none;">
-        <!-- ... Level 6 HTML ... -->
+        <h1 class="level-title">Level 6: Uncover the Missing Person</h1>
+        <h2>Objective: Identify the Omitted Astronaut</h2>
+        <p>A covert source reveals a last-minute crew change was made in secret. Someone was removed from the mission roster without public knowledge.</p>
+        <p>Examine the final flight roster to identify the astronaut who was excluded from the mission.</p>
+        <a href="crew-list-final-version.odt" class="download-link">Download .odt file</a>
+        <div id="odf"></div>
+        <div class="challenge-input-area">
+            <label for="removed-astronaut-input">Who was removed from the final flight crew?</label>
+            <div>
+                <input autocomplete="off" type="text" id="removed-astronaut-input" placeholder="Enter full name">
+                <button id="submit-astronaut-button">Submit Name</button>
+            </div>
+            <p id="level6-feedback" class="feedback-text"></p>
+        </div>
     </div>
     
     <div id="level7-content" class="screen-container" style="display: none;">
@@ -192,10 +285,9 @@
     <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
     
     <script type="module">
-        // Import the class from the local file.
+        // FIXED: Import the class from the local file.
         import { EmlReader } from './eml-parser.min.js';
 
-        // All DOM element constants are defined here
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
         const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
@@ -241,6 +333,7 @@
         const sourcePane = document.getElementById('source-pane');
         const emailRawSource = document.getElementById('email-raw-source');
 
+        // FIXED: Admin backdoor function restored.
         function jumpToLevel(level) {
             const levelNum = parseInt(level, 10);
             if (isNaN(levelNum) || levelNum < 1 || levelNum > 7) { console.error("Invalid level. Please use jumpToLevel(1) through jumpToLevel(7)."); return; }
@@ -431,15 +524,15 @@
                     '<span class="highlighted-clue">TURINGMACHINE</span>'
                 );
                 emailRawSource.innerHTML = highlightedHtml;
-                
-                // FIXED: This is the correct API usage.
+
                 const reader = new EmlReader(buffer);
+                const result = reader.parse();
                 
-                document.getElementById('email-subject').textContent = reader.getSubject() || '(No Subject)';
-                document.getElementById('email-from').textContent = reader.getFrom() ? reader.getFrom().text : 'N/A';
-                document.getElementById('email-to').textContent = reader.getTo() ? reader.getTo().text : 'N/A';
-                document.getElementById('email-date').textContent = reader.getDate() ? new Date(reader.getDate()).toLocaleString() : 'N/A';
-                document.getElementById('email-body').textContent = reader.getMessageText() || 'This email has no plain text body.';
+                document.getElementById('email-subject').textContent = result.subject || '(No Subject)';
+                document.getElementById('email-from').textContent = result.from ? result.from.text : 'N/A';
+                document.getElementById('email-to').textContent = result.to ? result.to.text : 'N/A';
+                document.getElementById('email-date').textContent = result.date ? new Date(result.date).toLocaleString() : 'N/A';
+                document.getElementById('email-body').textContent = result.text || 'This email has no plain text body.';
 
             } catch (error) {
                 console.error("EML Fetch/Process Error:", error);
