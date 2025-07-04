@@ -290,28 +290,26 @@ class EmlReader {
         this.rawEml = new TextDecoder('utf-8', { fatal: false }).decode(arrayBuffer);
         this.headers = {};
         this.body = '';
-        this.isHtml = false; // Flag to indicate HTML output
+        this.isHtml = false;
         this._parse();
     }
 
     _stripHtml(html) {
         if (!html) return html;
 
-        // Parse HTML string into a DOM
-        const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html'); // Wrap in div to handle fragments
+        const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html');
         const images = doc.querySelectorAll('img');
 
         images.forEach(img => {
             const src = img.getAttribute('src') || '';
-            if (!src || src.trim() === '') {
-                // Replace broken image with red X icon
+            // Check if the src is empty, invalid, or a broken base64
+            if (!src || src.trim() === '' || (src.startsWith('data:image') && !isValidBase64Image(src))) {
                 const redXImg = doc.createElement('img');
                 redXImg.setAttribute('src', 'https://adamclement-exe.github.io/insider/broken.png');
                 redXImg.setAttribute('alt', 'Broken Image');
                 redXImg.setAttribute('style', 'width: 24px; height: 24px;');
                 img.replaceWith(redXImg);
             } else {
-                // Keep valid images as alt text or remove if no alt
                 const altText = img.getAttribute('alt') || '';
                 if (altText) {
                     const textNode = doc.createTextNode(altText);
@@ -322,19 +320,29 @@ class EmlReader {
             }
         });
 
-        // Return the innerHTML of the wrapped div, excluding the div itself
         return doc.querySelector('div').innerHTML.trim() || '';
     }
 
+    // Simple check for valid base64 image (basic validation)
+    isValidBase64Image(src) {
+        try {
+            const base64Data = src.split(',')[1]; // Extract base64 part
+            if (!base64Data) return false;
+            // Attempt to decode a small portion (basic sanity check)
+            atob(base64Data.substring(0, 50));
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     _parse() {
-        // Find the end of headers (first blank line)
         const headerEndIndex = this.rawEml.search(/\r?\n\r?\n/);
         let bodyBlock = this.rawEml;
         if (headerEndIndex !== -1) {
             const headerBlock = this.rawEml.substring(0, headerEndIndex);
-            bodyBlock = this.rawEml.substring(headerEndIndex + 2); // Adjust for \r\n or \n
+            bodyBlock = this.rawEml.substring(headerEndIndex + 2);
 
-            // Parse headers
             const headerLines = headerBlock.split(/\r?\n(?![ \t])/);
             headerLines.forEach(line => {
                 const separatorIndex = line.indexOf(':');
@@ -350,14 +358,12 @@ class EmlReader {
         let finalContentType = this.headers['content-type'] || 'text/plain';
         let finalContentEncoding = this.headers['content-transfer-encoding'] || '';
 
-        // Handle multipart emails
         if (finalContentType.includes('multipart/')) {
             const boundaryMatch = finalContentType.match(/boundary="?([^"\n;]+)"?/i);
             if (boundaryMatch) {
                 const boundary = boundaryMatch[1];
                 const parts = bodyBlock.split(new RegExp(`--${boundary}(?:--)?\\s*`, 'g')).filter(part => part.trim());
 
-                let chosenPart = null;
                 for (const part of parts) {
                     const partHeaderMatch = part.match(/([\s\S]*?)\r?\n\r?\n([\s\S]*)/);
                     if (!partHeaderMatch) continue;
@@ -366,23 +372,21 @@ class EmlReader {
                     const partBody = partHeaderMatch[2];
                     const partContentType = (partHeaders.match(/content-type: ([^\r\n]+)/i) || [])[1] || '';
 
-                    if (partContentType.includes('text/plain') || partContentType.includes('text/html')) {
-                        chosenPart = { body: partBody, contentType: partContentType };
-                        break; // Prefer first text/plain or text/html part
+                    if (partContentType.includes('text/html')) {
+                        finalBody = partBody;
+                        finalContentType = partContentType;
+                        break;
+                    } else if (partContentType.includes('text/plain') && !finalBody.trim()) {
+                        finalBody = partBody;
+                        finalContentType = partContentType;
                     }
-                }
-
-                if (chosenPart) {
-                    finalBody = chosenPart.body;
-                    finalContentType = chosenPart.contentType;
                 }
             }
         }
 
-        // Decode body based on content-transfer-encoding
         if (finalContentEncoding.toLowerCase() === 'base64') {
             try {
-                finalBody = atob(finalBody.replace(/\s/g, '')); // Remove whitespace and decode base64
+                finalBody = atob(finalBody.replace(/\s/g, ''));
             } catch (e) {
                 console.error('Base64 decoding failed:', e);
             }
@@ -390,7 +394,6 @@ class EmlReader {
             finalBody = finalBody.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
         }
 
-        // Process body based on content type
         if (finalContentType.includes('text/html')) {
             this.body = this._stripHtml(finalBody);
             this.isHtml = true;
@@ -424,8 +427,8 @@ class EmlReader {
     getTo() { return this._parseAddress(this.headers['to']); }
     getDate() { return this.headers['date'] ? new Date(this.headers['date']) : null; }
     getMessageText() { return this.body; }
-    isHtmlOutput() { return this.isHtml; } // Check if output is HTML
-    getRawHtml() { return this.isHtml ? this.body : ''; } // Return raw HTML for rendering
+    isHtmlOutput() { return this.isHtml; }
+    getRawHtml() { return this.isHtml ? this.body : ''; }
 
     _parseAddress(headerValue) {
         if (!headerValue) return null;
@@ -436,7 +439,6 @@ class EmlReader {
         return { name: null, address: headerValue.trim(), text: headerValue };
     }
 }
-
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
         const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
