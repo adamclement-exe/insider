@@ -284,13 +284,10 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
     
-    <!-- This script tag now has type="module" which is essential -->
     <script type="module">
-        // FIXED: Import the class from the local file we saved.
-        // This file MUST exist in the same folder as the HTML file.
+        // FIXED: Import the class from the local file.
         import { EmlReader } from './eml-parser.min.js';
 
-        // All other JavaScript game logic follows
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
         const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
@@ -336,6 +333,7 @@
         const sourcePane = document.getElementById('source-pane');
         const emailRawSource = document.getElementById('email-raw-source');
 
+        // FIXED: Admin backdoor function restored.
         function jumpToLevel(level) {
             const levelNum = parseInt(level, 10);
             if (isNaN(levelNum) || levelNum < 1 || levelNum > 7) { console.error("Invalid level. Please use jumpToLevel(1) through jumpToLevel(7)."); return; }
@@ -527,18 +525,14 @@
                 );
                 emailRawSource.innerHTML = highlightedHtml;
 
-                new EmlReader(buffer).parse((err, result) => {
-                    if (err || !result) {
-                        console.error("EML Parse Error:", err);
-                        document.getElementById('email-subject').textContent = 'Error parsing email';
-                        return;
-                    }
-                    document.getElementById('email-subject').textContent = result.subject || '(No Subject)';
-                    document.getElementById('email-from').textContent = result.from ? result.from.text : 'N/A';
-                    document.getElementById('email-to').textContent = result.to ? result.to.text : 'N/A';
-                    document.getElementById('email-date').textContent = result.date ? new Date(result.date).toLocaleString() : 'N/A';
-                    document.getElementById('email-body').textContent = result.text || 'This email has no plain text body.';
-                });
+                const reader = new EmlReader(buffer);
+                const result = reader.parse();
+                
+                document.getElementById('email-subject').textContent = result.subject || '(No Subject)';
+                document.getElementById('email-from').textContent = result.from ? result.from.text : 'N/A';
+                document.getElementById('email-to').textContent = result.to ? result.to.text : 'N/A';
+                document.getElementById('email-date').textContent = result.date ? new Date(result.date).toLocaleString() : 'N/A';
+                document.getElementById('email-body').textContent = result.text || 'This email has no plain text body.';
 
             } catch (error) {
                 console.error("EML Fetch/Process Error:", error);
