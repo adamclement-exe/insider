@@ -303,7 +303,7 @@ class EmlReader {
         images.forEach(img => {
             const src = img.getAttribute('src') || '';
             // Check if the src is empty, invalid, or a broken base64
-            if (!src || src.trim() === '' || (src.startsWith('data:image') && !isValidBase64Image(src))) {
+            if (!src || src.trim() === '' || (src.startsWith('data:image') && !this.isValidBase64Image(src))) {
                 const redXImg = doc.createElement('img');
                 redXImg.setAttribute('src', 'https://adamclement-exe.github.io/insider/broken.png');
                 redXImg.setAttribute('alt', 'Broken Image');
@@ -323,7 +323,7 @@ class EmlReader {
         return doc.querySelector('div').innerHTML.trim() || '';
     }
 
-    // Simple check for valid base64 image (basic validation)
+    // Function to validate base64 image
     isValidBase64Image(src) {
         try {
             const base64Data = src.split(',')[1]; // Extract base64 part
@@ -439,6 +439,8 @@ class EmlReader {
         return { name: null, address: headerValue.trim(), text: headerValue };
     }
 }
+
+        
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
         const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
