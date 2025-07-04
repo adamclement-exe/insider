@@ -761,7 +761,7 @@ class EmlReader {
                 
                 const buffer = await response.arrayBuffer();
                 const rawEmlText = new TextDecoder().decode(buffer);
-                
+                emailRawSource.textContent = rawEmlText;
 
                 
                 const reader = new EmlReader(buffer);
