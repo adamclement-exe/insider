@@ -558,7 +558,7 @@
             sourcePane.classList.toggle('active', !isActive);
         }
         previewTab.addEventListener('click', () => ('preview'));
-        sourceTab.addEventListener('click', () => ('source'));
+        //sourceTab.addEventListener('click', () => ('source'));
         submitKeywordButtonL7.addEventListener('click', checkAnswerL7);
         async function checkAnswerL7() {
             const inputHash = await sha256(keywordInputL7.value.trim().toLowerCase());
