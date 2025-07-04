@@ -292,6 +292,12 @@
             this.body = '';
             this._parse();
         }
+        
+        _stripHtml(html) {
+             if (!html) return '';
+             const doc = new DOMParser().parseFromString(html, 'text/html');
+             return doc.body.textContent || "";
+        }
 
         _parse() {
             const headerEndIndex = this.rawEml.search(/\r?\n\r?\n/);
@@ -314,58 +320,48 @@
                 }
             });
             
-            this.body = bodyBlock; 
-            const contentType = this.headers['content-type'] || '';
+            let finalBody = bodyBlock;
+            let finalContentType = this.headers['content-type'] || '';
+            let finalContentEncoding = this.headers['content-transfer-encoding'] || '';
 
-            if (contentType.includes('multipart/')) {
-                const boundaryMatch = contentType.match(/boundary="?([^"]+)"?/i);
+            if (finalContentType.includes('multipart/')) {
+                const boundaryMatch = finalContentType.match(/boundary="?([^"]+)"?/i);
                 if (boundaryMatch) {
                     const boundary = boundaryMatch[1];
                     const parts = bodyBlock.split(new RegExp(`--${boundary}(--)?`));
                     
-                    let finalBody = '';
-                    let bodyFound = false;
-                    
-                    // --- MODIFIED LOGIC: Look for plain text, then fall back to HTML ---
-
-                    // 1. Try to find a 'text/plain' part first (best case)
+                    let chosenPart = null;
                     const plainTextPart = parts.find(p => p && p.toLowerCase().includes('content-type: text/plain'));
-                    if (plainTextPart) {
-                        const contentMatch = plainTextPart.match(/\r?\n\r?\n([\s\S]*)/);
-                        if (contentMatch && typeof contentMatch[1] === 'string') {
-                            finalBody = contentMatch[1];
-                            if (plainTextPart.toLowerCase().includes('content-transfer-encoding: quoted-printable')) {
-                                finalBody = finalBody.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
-                            }
-                            bodyFound = true;
-                        }
-                    }
+                    const htmlPart = parts.find(p => p && p.toLowerCase().includes('content-type: text/html'));
+                    
+                    chosenPart = plainTextPart || htmlPart; // Prefer plain text, fall back to HTML
 
-                    // 2. If no plain text, fall back to 'text/html'
-                    if (!bodyFound) {
-                        const htmlPart = parts.find(p => p && p.toLowerCase().includes('content-type: text/html'));
-                        if (htmlPart) {
-                            const contentMatch = htmlPart.match(/\r?\n\r?\n([\s\S]*)/);
-                            if (contentMatch && typeof contentMatch[1] === 'string') {
-                                let htmlBody = contentMatch[1];
-                                if (htmlPart.toLowerCase().includes('content-transfer-encoding: quoted-printable')) {
-                                    htmlBody = htmlBody.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
-                                }
-                                // Strip HTML tags to get plain text
-                                finalBody = htmlBody
-                                    .replace(/<style([\s\S]*?)<\/style>/gi, '')   // Remove style blocks
-                                    .replace(/<script([\s\S]*?)<\/script>/gi, '')  // Remove script blocks
-                                    .replace(/<[^>]*>/g, '\n')                     // Replace all tags with newlines
-                                    .replace(/(\r\n|\n|\r)/gm, "\n")              // Normalize line breaks
-                                    .replace(/\n\s*\n/g, '\n\n');                  // Collapse multiple blank lines
-                            }
+                    if (chosenPart) {
+                        const partHeaderMatch = chosenPart.match(/([\s\S]*?)\r?\n\r?\n/);
+                        if(partHeaderMatch) {
+                           const partHeaders = partHeaderMatch[1];
+                           const contentTypeMatch = partHeaders.match(/content-type: (.*)/i);
+                           const contentEncodingMatch = partHeaders.match(/content-transfer-encoding: (.*)/i);
+                           
+                           if(contentTypeMatch) finalContentType = contentTypeMatch[1];
+                           if(contentEncodingMatch) finalContentEncoding = contentEncodingMatch[1].trim();
+                           
+                           finalBody = chosenPart.substring(partHeaderMatch[0].length);
                         }
                     }
-                    this.body = finalBody;
                 }
-            } else if (this.headers['content-transfer-encoding'] === 'quoted-printable') {
-                this.body = this.body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
             }
+            
+            // --- Final Processing on the chosen body ---
+            if (finalContentEncoding.toLowerCase() === 'quoted-printable') {
+                finalBody = finalBody.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
+            }
+
+            if (finalContentType.includes('text/html')) {
+                 finalBody = this._stripHtml(finalBody);
+            }
+            
+            this.body = finalBody;
         }
 
         _decodeHeader(headerValue) {
