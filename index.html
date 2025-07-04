@@ -635,8 +635,11 @@ class EmlReader {
                 if (userMarker) map.removeLayer(userMarker);
                 userMarker = L.marker(latLng).addTo(map).bindPopup(`<b>${loc.display_name}</b>`).openPopup();
                 map.setView(latLng, 10);
-                if (loc.display_name.toLowerCase().includes("goonhilly")) {
-                    mapFeedback.textContent = `MISSION CONTROL CONFIRMED. Accessing L3...`; setTimeout(startLevel3, 2500);
+                const target = L.latLng(+xorDecodeFromB64("WFBcQFtWRkRf","mars"), +xorDecodeFromB64("QFBcQlhSR0Zb","mars"));
+                      const dist = target.distanceTo(ll);
+                      if(dist <= 10*1609.34){
+                        document.getElementById('map-feedback').textContent = `Confirmed: ${loc.display_name}`;
+                        setTimeout(()=>showScreen('level3'),2000);
                 } else { mapFeedback.textContent = `Negative contact at "${loc.display_name}". Recalibrate.`; }
             } else { mapFeedback.textContent = `Location not found.`; }
         }
