@@ -302,7 +302,6 @@ class EmlReader {
 
         images.forEach(img => {
             const src = img.getAttribute('src') || '';
-            // Check if the src is empty, invalid, or a broken base64
             if (!src || src.trim() === '' || (src.startsWith('data:image') && !this.isValidBase64Image(src))) {
                 const redXImg = doc.createElement('img');
                 redXImg.setAttribute('src', 'https://adamclement-exe.github.io/insider/broken.png');
@@ -323,12 +322,10 @@ class EmlReader {
         return doc.querySelector('div').innerHTML.trim() || '';
     }
 
-    // Function to validate base64 image
     isValidBase64Image(src) {
         try {
-            const base64Data = src.split(',')[1]; // Extract base64 part
+            const base64Data = src.split(',')[1];
             if (!base64Data) return false;
-            // Attempt to decode a small portion (basic sanity check)
             atob(base64Data.substring(0, 50));
             return true;
         } catch (e) {
@@ -342,6 +339,7 @@ class EmlReader {
         if (headerEndIndex !== -1) {
             const headerBlock = this.rawEml.substring(0, headerEndIndex);
             bodyBlock = this.rawEml.substring(headerEndIndex + 2);
+            console.log('Raw body block:', bodyBlock.substring(0, 200)); // Log first 200 chars of body
 
             const headerLines = headerBlock.split(/\r?\n(?![ \t])/);
             headerLines.forEach(line => {
@@ -350,6 +348,7 @@ class EmlReader {
                     const key = line.substring(0, separatorIndex).trim().toLowerCase();
                     const value = line.substring(separatorIndex + 1).trim().replace(/\r?\n[ \t]+/g, ' ');
                     this.headers[key] = value;
+                    console.log(`Header: ${key} = ${value}`);
                 }
             });
         }
@@ -357,28 +356,33 @@ class EmlReader {
         let finalBody = bodyBlock;
         let finalContentType = this.headers['content-type'] || 'text/plain';
         let finalContentEncoding = this.headers['content-transfer-encoding'] || '';
+        console.log('Initial content type:', finalContentType);
 
         if (finalContentType.includes('multipart/')) {
             const boundaryMatch = finalContentType.match(/boundary="?([^"\n;]+)"?/i);
             if (boundaryMatch) {
                 const boundary = boundaryMatch[1];
+                console.log('Detected boundary:', boundary);
                 const parts = bodyBlock.split(new RegExp(`--${boundary}(?:--)?\\s*`, 'g')).filter(part => part.trim());
+                console.log('Number of parts found:', parts.length);
 
                 for (const part of parts) {
                     const partHeaderMatch = part.match(/([\s\S]*?)\r?\n\r?\n([\s\S]*)/);
-                    if (!partHeaderMatch) continue;
+                    if (partHeaderMatch) {
+                        const partHeaders = partHeaderMatch[1].toLowerCase();
+                        const partBody = partHeaderMatch[2];
+                        const partContentType = (partHeaders.match(/content-type: ([^\r\n]+)/i) || [])[1] || '';
+                        console.log('Part content type:', partContentType, 'Body snippet:', partBody.substring(0, 100));
 
-                    const partHeaders = partHeaderMatch[1].toLowerCase();
-                    const partBody = partHeaderMatch[2];
-                    const partContentType = (partHeaders.match(/content-type: ([^\r\n]+)/i) || [])[1] || '';
-
-                    if (partContentType.includes('text/html')) {
-                        finalBody = partBody;
-                        finalContentType = partContentType;
-                        break;
-                    } else if (partContentType.includes('text/plain') && !finalBody.trim()) {
-                        finalBody = partBody;
-                        finalContentType = partContentType;
+                        if (partContentType.includes('text/html')) {
+                            finalBody = partBody;
+                            finalContentType = partContentType;
+                            console.log('Selected HTML part:', finalBody.substring(0, 100));
+                            break;
+                        } else if (partContentType.includes('text/plain') && !finalBody.trim()) {
+                            finalBody = partBody;
+                            finalContentType = partContentType;
+                        }
                     }
                 }
             }
@@ -397,9 +401,11 @@ class EmlReader {
         if (finalContentType.includes('text/html')) {
             this.body = this._stripHtml(finalBody);
             this.isHtml = true;
+            console.log('Processed HTML body:', this.body.substring(0, 200));
         } else {
             this.body = finalBody.trim();
             this.isHtml = false;
+            console.log('Processed plain text body:', this.body.substring(0, 200));
         }
     }
 
@@ -421,6 +427,24 @@ class EmlReader {
             return encodedText;
         });
     }
+
+    getSubject() { return this._decodeHeader(this.headers['subject']); }
+    getFrom() { return this._parseAddress(this.headers['from']); }
+    getTo() { return this._parseAddress(this.headers['to']); }
+    getDate() { return this.headers['date'] ? new Date(this.headers['date']) : null; }
+    getMessageText() { return this.body; }
+    isHtmlOutput() { return this.isHtml; }
+    getRawHtml() { return this.isHtml ? this.body : ''; }
+
+    _parseAddress(headerValue) {
+        if (!headerValue) return null;
+        const match = headerValue.match(/(.*)<(.*)>/);
+        if (match) {
+            return { name: this._decodeHeader(match[1].trim()), address: match[2].trim(), text: headerValue };
+        }
+        return { name: null, address: headerValue.trim(), text: headerValue };
+    }
+}
 
     getSubject() { return this._decodeHeader(this.headers['subject']); }
     getFrom() { return this._parseAddress(this.headers['from']); }
