@@ -310,15 +310,13 @@ class EmlReader {
                 redXImg.setAttribute('src', 'https://adamclement-exe.github.io/insider/broken.png');
                 redXImg.setAttribute('alt', 'Broken Image');
                 redXImg.setAttribute('style', 'width: 24px; height: 24px;');
-                redXImg.setAttribute('data-processed', 'true'); // Mark as processed to avoid further changes
+                redXImg.setAttribute('data-processed', 'true'); // Mark as processed
                 img.parentNode.replaceChild(redXImg, img);
             } else if (img.getAttribute('alt') && !img.getAttribute('data-processed')) {
-                // Only replace with alt text if the image is valid and not processed
                 console.log('Keeping image with alt:', img.getAttribute('alt'));
                 const textNode = doc.createTextNode(img.getAttribute('alt'));
                 img.parentNode.replaceChild(textNode, img);
             } else if (!img.getAttribute('alt') && !img.getAttribute('data-processed')) {
-                // Remove image if valid but no alt text and not processed
                 img.parentNode.removeChild(img);
             }
         });
@@ -332,9 +330,13 @@ class EmlReader {
         try {
             const base64Data = src.split(',')[1];
             if (!base64Data) return false;
-            // Check the entire base64 if possible, with a fallback to 100 chars
-            const checkLength = Math.min(base64Data.length, 100);
+            // Check a larger portion (up to 500 chars) to better detect truncation
+            const checkLength = Math.min(base64Data.length, 500);
             atob(base64Data.substring(0, checkLength));
+            // Additional check: Ensure base64 ends with padding (=) or is a complete chunk
+            if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64Data)) {
+                throw new Error('Invalid base64 padding');
+            }
             return true;
         } catch (e) {
             console.log('Base64 validation failed:', e.message);
@@ -348,7 +350,7 @@ class EmlReader {
         if (headerEndIndex !== -1) {
             const headerBlock = this.rawEml.substring(0, headerEndIndex);
             bodyBlock = this.rawEml.substring(headerEndIndex + 2);
-            console.log('Raw body block:', bodyBlock.substring(0, 500)); // Log more of the body
+            console.log('Raw body block:', bodyBlock.substring(0, 1000)); // Log more of the body
 
             const headerLines = headerBlock.split(/\r?\n(?![ \t])/);
             headerLines.forEach(line => {
@@ -381,12 +383,12 @@ class EmlReader {
                         const partHeaders = partHeaderMatch[1].toLowerCase();
                         const partBody = partHeaderMatch[2];
                         const partContentType = (partHeaders.match(/content-type: ([^\r\n]+)/i) || [])[1] || '';
-                        console.log('Part content type:', partContentType, 'Body snippet:', partBody.substring(0, 200));
+                        console.log('Part content type:', partContentType, 'Body snippet:', partBody.substring(0, 500));
 
                         if (partContentType.includes('text/html')) {
                             finalBody = partBody;
                             finalContentType = partContentType;
-                            console.log('Selected HTML part:', finalBody.substring(0, 200));
+                            console.log('Selected HTML part:', finalBody.substring(0, 500));
                             break;
                         } else if (partContentType.includes('text/plain') && !finalBody.trim()) {
                             finalBody = partBody;
