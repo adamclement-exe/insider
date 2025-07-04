@@ -639,7 +639,8 @@ class EmlReader {
                       const dist = target.distanceTo(ll);
                       if(dist <= 10*1609.34){
                         document.getElementById('map-feedback').textContent = `Confirmed: ${loc.display_name}`;
-                        setTimeout(()=>showScreen('level3'),2000);
+                        setTimeout(() => showActiveScreen('level3'), 2000);
+
                 } else { mapFeedback.textContent = `Negative contact at "${loc.display_name}". Recalibrate.`; }
             } else { mapFeedback.textContent = `Location not found.`; }
         }
