@@ -298,7 +298,7 @@ class EmlReader {
         if (!html) return html;
 
         // Parse HTML string into a DOM
-        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html'); // Wrap in div to handle fragments
         const images = doc.querySelectorAll('img');
 
         images.forEach(img => {
@@ -322,7 +322,8 @@ class EmlReader {
             }
         });
 
-        return doc.body.innerHTML.trim() || '';
+        // Return the innerHTML of the wrapped div, excluding the div itself
+        return doc.querySelector('div').innerHTML.trim() || '';
     }
 
     _parse() {
@@ -423,7 +424,8 @@ class EmlReader {
     getTo() { return this._parseAddress(this.headers['to']); }
     getDate() { return this.headers['date'] ? new Date(this.headers['date']) : null; }
     getMessageText() { return this.body; }
-    isHtmlOutput() { return this.isHtml; } // New method to check if output is HTML
+    isHtmlOutput() { return this.isHtml; } // Check if output is HTML
+    getRawHtml() { return this.isHtml ? this.body : ''; } // Return raw HTML for rendering
 
     _parseAddress(headerValue) {
         if (!headerValue) return null;
