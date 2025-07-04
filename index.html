@@ -13,13 +13,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
-    <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
-    <!-- We are using the correct browser version of the library from your demo. -->
-    <script src="https://cdn.jsdelivr.net/npm/eml-parser@2.0.2/eml-parser.min.js"></script>
-
+    
     <style>
         body {
             font-family: 'Courier New', Courier, monospace; background-color: #1a1a1a;
@@ -92,7 +86,6 @@
         .download-link { display: inline-block; padding: 10px 20px; margin: 15px auto; background-color: #004400; color: #0f0; border: 1px solid #0f0; text-decoration: none; border-radius: 5px; }
         .download-link:hover { background-color: #006600; }
         
-        /* --- Level 7 Styles --- */
         #level7-content .email-container { width: 90%; max-width: 800px; margin: 10px auto; }
         .email-tabs { border-bottom: 1px solid #444; margin-bottom: 0; padding-left: 10px; }
         .tab-button { background-color: #2c2c2c; color: #ccc; border: 1px solid #444; border-bottom: none; padding: 8px 15px; cursor: pointer; border-radius: 5px 5px 0 0; font-family: Arial, sans-serif; }
@@ -119,6 +112,7 @@
     </style>
 </head>
 <body>
+    
     <div id="title-screen-content" class="screen-container">
         <h1 class="screen-title">Exeter College Taster Day - Insider Threats</h1>
         <div class="mission-brief">
@@ -233,7 +227,7 @@
             <p id="level6-feedback" class="feedback-text"></p>
         </div>
     </div>
-
+    
     <div id="level7-content" class="screen-container" style="display: none;">
         <h1 class="level-title">Level 7: Decrypt the Final Directive</h1>
         <p>An intercepted email from the commander contains a hidden keyword. Switch to the <strong>Raw Source</strong> tab to find it.</p>
@@ -287,8 +281,16 @@
         </div>
     </div>
 
-    <script>
-        // DOM Elements
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
+    
+    <!-- This script tag now has type="module" which is essential -->
+    <script type="module">
+        // FIXED: Import the class from the local file we saved.
+        // This file MUST exist in the same folder as the HTML file.
+        import { EmlReader } from './eml-parser.min.js';
+
+        // All other JavaScript game logic follows
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
         const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
@@ -334,7 +336,6 @@
         const sourcePane = document.getElementById('source-pane');
         const emailRawSource = document.getElementById('email-raw-source');
 
-        // --- ADMIN BACKDOOR ---
         function jumpToLevel(level) {
             const levelNum = parseInt(level, 10);
             if (isNaN(levelNum) || levelNum < 1 || levelNum > 7) { console.error("Invalid level. Please use jumpToLevel(1) through jumpToLevel(7)."); return; }
@@ -348,7 +349,6 @@
         }
         window.jumpToLevel = jumpToLevel;
 
-        // --- UTILITY FUNCTIONS ---
         async function sha256(str) {
             const textAsBuffer = new TextEncoder().encode(str);
             const hashBuffer = await window.crypto.subtle.digest('SHA-256', textAsBuffer);
@@ -356,7 +356,6 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // --- SECURE CONFIGURATION with HASHES ---
         const correctCodeL1_hash = '0c17178592679c2fdf78ef43301d109902c1a70fe52c0e44971a0cf2390a7d2b';
         const correctCodeL1_length = 5;
         const correctNameL3_hash = '22c5e6277d26b325337896d1fedd2e538b3d8194d84598c0ca58d36c922c4119';
@@ -364,8 +363,6 @@
         const correctMissionStatusL5_hash = 'ffa63583dfa6706b87d284b86b0d693a161e4840aad2c5cf6b5d27c3b9621f7d';
         const correctAstronautL6_hash = 'c6e646cc23ab8493c5f63446e5987254532807915b5af39979f170c73277aa2b';
         const correctKeywordL7_hash = 'a748c081e7a52701411516a506169542a987178a3c551381395b6c310432326f';
-
-        // --- GLOBAL VARIABLES ---
         let currentEnteredCode = "", animationInProgress = false, map, userMarker;
         const xmlData = `<secure-access><level>5</level><restricted>true</restricted><uid>49</uid><base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64></secure-access>`.trim();
 
@@ -375,7 +372,6 @@
           odfcanvas.load("crew-list-final-version.odt");
         }
         
-        // --- CORE GAME LOGIC ---
         function showActiveScreen(screenId) {
             Object.values(levelScreens).forEach(screenDiv => screenDiv.style.display = 'none');
             if (levelScreens[screenId]) { levelScreens[screenId].style.display = 'flex'; }
@@ -393,7 +389,6 @@
 
         startGameButton.addEventListener('click', () => initLevel1());
         
-        // --- LEVEL 1 LOGIC ---
         function initLevel1() {
             showActiveScreen('level1');
             keypadInputButtons.forEach(b => b.disabled = true);
@@ -458,7 +453,6 @@
         }
         capturePacketButton.addEventListener('click', playIntroAnimation);
 
-        // --- LEVEL 2 LOGIC ---
         function startLevel2() {
             showActiveScreen('level2');
             if (!map) { map = L.map(mapContainer).setView([52.5, -1.5], 6); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map); }
@@ -481,7 +475,6 @@
             } else { mapFeedback.textContent = `Location not found.`; }
         }
         
-        // --- LEVEL 3 LOGIC ---
         function startLevel3() { showActiveScreen('level3'); embedPDF(pdfViewerContainerL3, 'redacted.pdf'); }
         submitNameButtonL3.addEventListener('click', checkNameL3);
         async function checkNameL3() {
@@ -489,8 +482,7 @@
             if (inputHash === correctNameL3_hash) { level3Feedback.textContent = "IDENTITY CONFIRMED. Accessing L4..."; setTimeout(startLevel4, 2000); }
             else { level3Feedback.textContent = "Incorrect. Subject unidentified."; }
         }
-
-        // --- LEVEL 4 LOGIC ---
+        
         function startLevel4() { showActiveScreen('level4'); embedPDF(pdfViewerContainerL4, 'The Evolution and Impact of Rocket Ships.pdf'); }
         submitLaunchCodeButtonL4.addEventListener('click', checkLaunchCodeL4);
         async function checkLaunchCodeL4() {
@@ -499,7 +491,6 @@
             else { level4Feedback.textContent = "Invalid Code."; }
         }
         
-        // --- LEVEL 5 LOGIC ---
         function startLevel5() { showActiveScreen('level5'); }
         submitStatusButtonL5.addEventListener('click', checkMissionStatusL5);
         async function checkMissionStatusL5() {
@@ -508,7 +499,6 @@
             else { level5Feedback.textContent = "Incorrect status."; }
         }
         
-        // --- LEVEL 6 LOGIC ---
         function startLevel6() { showActiveScreen('level6'); window.setTimeout(init, 0); }
         submitAstronautButtonL6.addEventListener('click', checkAnswerL6);
         async function checkAnswerL6() {
@@ -517,12 +507,11 @@
             else { level6Feedback.textContent = "Incorrect."; }
         }
 
-        // --- LEVEL 7 LOGIC ---
         async function startLevel7() {
             showActiveScreen('level7');
             keywordInputL7.value = "";
             level7Feedback.textContent = "Analyze the commander's email for the keyword.";
-            switchTab('preview'); // Default to the preview tab
+            switchTab('preview'); 
 
             try {
                 const response = await fetch('commander.eml');
@@ -530,17 +519,14 @@
                 
                 const buffer = await response.arrayBuffer();
 
-                // 1. Convert buffer to text for the Raw Source view
                 const rawEmlText = new TextDecoder().decode(buffer);
                 
-                // Highlight the clue in the raw text and display it
                 const highlightedHtml = rawEmlText.replace(
                     'TURINGMACHINE',
                     '<span class="highlighted-clue">TURINGMACHINE</span>'
                 );
                 emailRawSource.innerHTML = highlightedHtml;
 
-                // 2. Parse the buffer to populate the Preview view
                 new EmlReader(buffer).parse((err, result) => {
                     if (err || !result) {
                         console.error("EML Parse Error:", err);
@@ -582,7 +568,6 @@
             }
         }
 
-        // --- GAME COMPLETE LOGIC ---
         function startGameComplete() {
             showActiveScreen('gameComplete');
             launchFireworks();
