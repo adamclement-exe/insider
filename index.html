@@ -284,7 +284,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
     
-    <!-- FIX: Replaced external EmlReader.js with an embedded, browser-compatible parser -->
+    <!-- FIX: Replaced the previous EmlReader with a more robust, error-proof version -->
     <script>
     class EmlReader {
         constructor(arrayBuffer) {
@@ -295,10 +295,19 @@
         }
 
         _parse() {
-            const parts = this.rawEml.split(/\r?\n\r?\n/);
-            const headerBlock = parts.shift();
-            let bodyBlock = parts.join('\n\n');
+            const headerEndIndex = this.rawEml.search(/\r?\n\r?\n/);
 
+            // Case 1: No headers found or file is empty. Treat entire content as body.
+            if (headerEndIndex === -1) {
+                this.body = this.rawEml;
+                return;
+            }
+
+            // Case 2: Headers found.
+            const headerBlock = this.rawEml.substring(0, headerEndIndex);
+            let bodyBlock = this.rawEml.substring(headerEndIndex + 4); // +4 to skip \r\n\r\n
+
+            // Parse headers
             const headerLines = headerBlock.split(/\r?\n(?![ \t])/);
             headerLines.forEach(line => {
                 const separatorIndex = line.indexOf(':');
@@ -309,35 +318,32 @@
                 }
             });
             
-            const contentType = this.headers['content-type'] || '';
+            this.body = bodyBlock; // Set a default body first.
+            const contentType = this.headers['content-type'] || ''; // Guarantees a string
+
+            // If multipart, find the correct text part.
             if (contentType.includes('multipart/')) {
-                const boundaryMatch = contentType.match(/boundary="?([^"]+)"?/);
+                const boundaryMatch = contentType.match(/boundary="?([^"]+)"?/i);
                 if (boundaryMatch) {
                     const boundary = boundaryMatch[1];
-                    const bodyParts = bodyBlock.split(new RegExp('--' + boundary + '(--)?\r?\n'));
-                    
+                    const bodyParts = bodyBlock.split(new RegExp('--' + boundary + '(--)?'));
+
                     for (const part of bodyParts) {
-                        if (part.includes('Content-Type: text/plain')) {
+                        if (part.toLowerCase().includes('content-type: text/plain')) {
                             const contentMatch = part.match(/\r?\n\r?\n([\s\S]*)/);
-                            if (contentMatch) {
+                            if (contentMatch && contentMatch[1]) {
                                 let text = contentMatch[1];
                                 if (part.toLowerCase().includes('content-transfer-encoding: quoted-printable')) {
-                                    text = text
-                                        .replace(/=\r?\n/g, '')
-                                        .replace(/=([0-9A-F]{2})/g, (match, hex) => String.fromCharCode(parseInt(hex, 16)));
+                                    text = text.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
                                 }
-                                this.body = text;
+                                this.body = text.trim();
                                 break;
                             }
                         }
                     }
                 }
-            } else {
-                 this.body = bodyBlock;
-            }
-
-            if (!this.body) {
-                 this.body = bodyBlock; 
+            } else if (this.headers['content-transfer-encoding'] === 'quoted-printable') {
+                this.body = this.body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
             }
         }
 
@@ -360,9 +366,7 @@
             });
         }
 
-        getSubject() {
-            return this._decodeHeader(this.headers['subject']);
-        }
+        getSubject() { return this._decodeHeader(this.headers['subject']); }
 
         _parseAddress(headerValue) {
             if (!headerValue) return null;
@@ -373,21 +377,10 @@
             return { name: null, address: headerValue.trim(), text: headerValue };
         }
 
-        getFrom() {
-            return this._parseAddress(this.headers['from']);
-        }
-
-        getTo() {
-            return this._parseAddress(this.headers['to']);
-        }
-
-        getDate() {
-            return this.headers['date'] ? new Date(this.headers['date']) : null;
-        }
-
-        getMessageText() {
-            return this.body.trim();
-        }
+        getFrom() { return this._parseAddress(this.headers['from']); }
+        getTo() { return this._parseAddress(this.headers['to']); }
+        getDate() { return this.headers['date'] ? new Date(this.headers['date']) : null; }
+        getMessageText() { return this.body.trim(); }
     }
     </script>
     
