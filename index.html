@@ -295,8 +295,34 @@ class EmlReader {
 
     _stripHtml(html) {
         if (!html) return '';
+
+        // Parse HTML string into a DOM
         const doc = new DOMParser().parseFromString(html, 'text/html');
-        return doc.body.textContent || '';
+        const images = doc.querySelectorAll('img');
+
+        images.forEach(img => {
+            const src = img.getAttribute('src') || '';
+            if (!src || src.trim() === '') {
+                // Replace broken image with red X icon
+                const redXImg = doc.createElement('img');
+                redXImg.setAttribute('src', 'https://adamclement-exe.github.io/insider/broken.png');
+                redXImg.setAttribute('alt', 'Broken Image');
+                redXImg.setAttribute('style', 'width: 24px; height: 24px;'); // Optional: Set size to match Outlook icon
+                img.replaceWith(redXImg);
+            } else {
+                // Use alt text for valid images, or remove if no alt
+                const altText = img.getAttribute('alt') || '';
+                if (altText) {
+                    const textNode = doc.createTextNode(altText);
+                    img.replaceWith(textNode);
+                } else {
+                    img.remove();
+                }
+            }
+        });
+
+        // Return HTML content if it's HTML, otherwise plain text
+        return doc.body.innerHTML.trim() || '';
     }
 
     _parse() {
@@ -338,10 +364,9 @@ class EmlReader {
                     const partHeaders = partHeaderMatch[1].toLowerCase();
                     const partBody = partHeaderMatch[2];
                     const partContentType = (partHeaders.match(/content-type: ([^\r\n]+)/i) || [])[1] || '';
-                    const partEncoding = (partHeaders.match(/content-transfer-encoding: ([^\r\n]+)/i) || [])[1] || '';
 
                     if (partContentType.includes('text/plain') || partContentType.includes('text/html')) {
-                        chosenPart = { body: partBody, contentType: partContentType, encoding: partEncoding };
+                        chosenPart = { body: partBody, contentType: partContentType };
                         break; // Prefer first text/plain or text/html part
                     }
                 }
@@ -349,7 +374,6 @@ class EmlReader {
                 if (chosenPart) {
                     finalBody = chosenPart.body;
                     finalContentType = chosenPart.contentType;
-                    finalContentEncoding = chosenPart.encoding;
                 }
             }
         }
@@ -365,12 +389,12 @@ class EmlReader {
             finalBody = finalBody.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
         }
 
-        // Strip HTML if content-type is text/html
+        // Process body based on content type
         if (finalContentType.includes('text/html')) {
-            finalBody = this._stripHtml(finalBody);
+            this.body = this._stripHtml(finalBody);
+        } else {
+            this.body = finalBody.trim();
         }
-
-        this.body = finalBody.trim();
     }
 
     _decodeHeader(headerValue) {
@@ -407,9 +431,7 @@ class EmlReader {
         return { name: null, address: headerValue.trim(), text: headerValue };
     }
 }
-    </script>
-    
-    <script>
+
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
         const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
@@ -639,11 +661,7 @@ class EmlReader {
                 const buffer = await response.arrayBuffer();
                 const rawEmlText = new TextDecoder().decode(buffer);
                 
-                const highlightedHtml = rawEmlText.replace(
-                    'TURINGMACHINE',
-                    '<span class="highlighted-clue">TURINGMACHINE</span>'
-                );
-                emailRawSource.innerHTML = highlightedHtml;
+
                 
                 const reader = new EmlReader(buffer);
                 
