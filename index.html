@@ -290,11 +290,12 @@ class EmlReader {
         this.rawEml = new TextDecoder('utf-8', { fatal: false }).decode(arrayBuffer);
         this.headers = {};
         this.body = '';
+        this.isHtml = false; // Flag to indicate HTML output
         this._parse();
     }
 
     _stripHtml(html) {
-        if (!html) return '';
+        if (!html) return html;
 
         // Parse HTML string into a DOM
         const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -307,10 +308,10 @@ class EmlReader {
                 const redXImg = doc.createElement('img');
                 redXImg.setAttribute('src', 'https://adamclement-exe.github.io/insider/broken.png');
                 redXImg.setAttribute('alt', 'Broken Image');
-                redXImg.setAttribute('style', 'width: 24px; height: 24px;'); // Optional: Set size to match Outlook icon
+                redXImg.setAttribute('style', 'width: 24px; height: 24px;');
                 img.replaceWith(redXImg);
             } else {
-                // Use alt text for valid images, or remove if no alt
+                // Keep valid images as alt text or remove if no alt
                 const altText = img.getAttribute('alt') || '';
                 if (altText) {
                     const textNode = doc.createTextNode(altText);
@@ -321,7 +322,6 @@ class EmlReader {
             }
         });
 
-        // Return HTML content if it's HTML, otherwise plain text
         return doc.body.innerHTML.trim() || '';
     }
 
@@ -392,8 +392,10 @@ class EmlReader {
         // Process body based on content type
         if (finalContentType.includes('text/html')) {
             this.body = this._stripHtml(finalBody);
+            this.isHtml = true;
         } else {
             this.body = finalBody.trim();
+            this.isHtml = false;
         }
     }
 
@@ -421,6 +423,7 @@ class EmlReader {
     getTo() { return this._parseAddress(this.headers['to']); }
     getDate() { return this.headers['date'] ? new Date(this.headers['date']) : null; }
     getMessageText() { return this.body; }
+    isHtmlOutput() { return this.isHtml; } // New method to check if output is HTML
 
     _parseAddress(headerValue) {
         if (!headerValue) return null;
