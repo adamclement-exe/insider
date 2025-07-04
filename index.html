@@ -285,7 +285,7 @@
     <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
     
     <script>
-        class EmlReader {
+class EmlReader {
     constructor(arrayBuffer) {
         this.rawEml = new TextDecoder('utf-8', { fatal: false }).decode(arrayBuffer);
         this.headers = {};
@@ -310,21 +310,19 @@
                 redXImg.setAttribute('src', 'https://adamclement-exe.github.io/insider/broken.png');
                 redXImg.setAttribute('alt', 'Broken Image');
                 redXImg.setAttribute('style', 'width: 24px; height: 24px;');
-                img.replaceWith(redXImg);
+                img.parentNode.replaceChild(redXImg, img); // Use parentNode to avoid DOM mutation issues
             } else {
                 const altText = img.getAttribute('alt') || '';
                 console.log('Keeping image with alt:', altText);
                 if (altText) {
                     const textNode = doc.createTextNode(altText);
-                    img.replaceWith(textNode);
-                } else {
-                    img.remove();
-                }
+                    img.parentNode.replaceChild(textNode, img);
+                } // Removed else clause to prevent removal if no alt
             }
         });
 
         const result = doc.querySelector('div').innerHTML.trim() || '';
-        console.log('Stripped HTML result:', result.substring(0, 200) + (result.length > 200 ? '...' : '')); // Log result
+        console.log('Stripped HTML result:', result.substring(0, 500) + (result.length > 500 ? '...' : '')); // Log more content
         return result;
     }
 
@@ -332,8 +330,9 @@
         try {
             const base64Data = src.split(',')[1];
             if (!base64Data) return false;
-            // Check a larger portion to catch truncated base64
-            atob(base64Data.substring(0, 100));
+            // Check the entire base64 if possible, with a fallback to 100 chars
+            const checkLength = Math.min(base64Data.length, 100);
+            atob(base64Data.substring(0, checkLength));
             return true;
         } catch (e) {
             console.log('Base64 validation failed:', e.message);
@@ -347,7 +346,7 @@
         if (headerEndIndex !== -1) {
             const headerBlock = this.rawEml.substring(0, headerEndIndex);
             bodyBlock = this.rawEml.substring(headerEndIndex + 2);
-            console.log('Raw body block:', bodyBlock.substring(0, 200));
+            console.log('Raw body block:', bodyBlock.substring(0, 500)); // Log more of the body
 
             const headerLines = headerBlock.split(/\r?\n(?![ \t])/);
             headerLines.forEach(line => {
@@ -380,12 +379,12 @@
                         const partHeaders = partHeaderMatch[1].toLowerCase();
                         const partBody = partHeaderMatch[2];
                         const partContentType = (partHeaders.match(/content-type: ([^\r\n]+)/i) || [])[1] || '';
-                        console.log('Part content type:', partContentType, 'Body snippet:', partBody.substring(0, 100));
+                        console.log('Part content type:', partContentType, 'Body snippet:', partBody.substring(0, 200));
 
                         if (partContentType.includes('text/html')) {
                             finalBody = partBody;
                             finalContentType = partContentType;
-                            console.log('Selected HTML part:', finalBody.substring(0, 100));
+                            console.log('Selected HTML part:', finalBody.substring(0, 200));
                             break;
                         } else if (partContentType.includes('text/plain') && !finalBody.trim()) {
                             finalBody = partBody;
@@ -409,11 +408,11 @@
         if (finalContentType.includes('text/html')) {
             this.body = this._stripHtml(finalBody);
             this.isHtml = true;
-            console.log('Processed HTML body:', this.body.substring(0, 200));
+            console.log('Processed HTML body:', this.body.substring(0, 500));
         } else {
             this.body = finalBody.trim();
             this.isHtml = false;
-            console.log('Processed plain text body:', this.body.substring(0, 200));
+            console.log('Processed plain text body:', this.body.substring(0, 500));
         }
     }
 
@@ -453,7 +452,6 @@
         return { name: null, address: headerValue.trim(), text: headerValue };
     }
 }
-
         
         const hatchElement = document.getElementById('the-hatch');
         const keypadDisplay = document.getElementById('keypad-display');
