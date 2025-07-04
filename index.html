@@ -17,7 +17,7 @@
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
     <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
-    <!-- The CDN link below provides the browser-ready version of the library from the GitHub link you provided -->
+    <!-- We are using the correct browser version of the library from your demo. -->
     <script src="https://cdn.jsdelivr.net/npm/eml-parser@2.0.2/eml-parser.min.js"></script>
 
     <style>
@@ -119,7 +119,6 @@
     </style>
 </head>
 <body>
-    <!-- Title Screen and other levels remain the same -->
     <div id="title-screen-content" class="screen-container">
         <h1 class="screen-title">Exeter College Taster Day - Insider Threats</h1>
         <div class="mission-brief">
@@ -239,13 +238,11 @@
         <h1 class="level-title">Level 7: Decrypt the Final Directive</h1>
         <p>An intercepted email from the commander contains a hidden keyword. Switch to the <strong>Raw Source</strong> tab to find it.</p>
         <a href="commander.eml" download class="download-link">Download Commander's Email (commander.eml)</a>
-        
         <div class="email-container">
             <div class="email-tabs">
                 <button id="preview-tab" class="tab-button">Preview</button>
                 <button id="source-tab" class="tab-button">Raw Source</button>
             </div>
-
             <div id="preview-pane" class="email-pane">
                 <div class="outlook-preview">
                     <h3 id="email-subject">Loading...</h3>
@@ -257,15 +254,12 @@
                     <div id="email-body" class="outlook-body"></div>
                 </div>
             </div>
-
-            <!-- This is now a placeholder, filled by JavaScript -->
             <div id="source-pane" class="email-pane">
                 <div class="email-source-container">
                     <pre class="email-source"><code id="email-raw-source">Loading source...</code></pre>
                 </div>
             </div>
         </div>
-
         <div class="challenge-input-area">
             <label for="keyword-input">Enter the final decryption keyword:</label>
             <div>
@@ -339,7 +333,6 @@
         const previewPane = document.getElementById('preview-pane');
         const sourcePane = document.getElementById('source-pane');
         const emailRawSource = document.getElementById('email-raw-source');
-
 
         // --- ADMIN BACKDOOR ---
         function jumpToLevel(level) {
@@ -465,7 +458,7 @@
         }
         capturePacketButton.addEventListener('click', playIntroAnimation);
 
-        // --- LEVEL 2-6 LOGIC ---
+        // --- LEVEL 2 LOGIC ---
         function startLevel2() {
             showActiveScreen('level2');
             if (!map) { map = L.map(mapContainer).setView([52.5, -1.5], 6); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map); }
@@ -487,57 +480,68 @@
                 } else { mapFeedback.textContent = `Negative contact at "${loc.display_name}". Recalibrate.`; }
             } else { mapFeedback.textContent = `Location not found.`; }
         }
+        
+        // --- LEVEL 3 LOGIC ---
         function startLevel3() { showActiveScreen('level3'); embedPDF(pdfViewerContainerL3, 'redacted.pdf'); }
+        submitNameButtonL3.addEventListener('click', checkNameL3);
         async function checkNameL3() {
             const inputHash = await sha256(nameInputL3.value.trim().toLowerCase());
             if (inputHash === correctNameL3_hash) { level3Feedback.textContent = "IDENTITY CONFIRMED. Accessing L4..."; setTimeout(startLevel4, 2000); }
             else { level3Feedback.textContent = "Incorrect. Subject unidentified."; }
         }
-        submitNameButtonL3.addEventListener('click', checkNameL3);
+
+        // --- LEVEL 4 LOGIC ---
         function startLevel4() { showActiveScreen('level4'); embedPDF(pdfViewerContainerL4, 'The Evolution and Impact of Rocket Ships.pdf'); }
+        submitLaunchCodeButtonL4.addEventListener('click', checkLaunchCodeL4);
         async function checkLaunchCodeL4() {
             const inputHash = await sha256(launchCodeInputL4.value.trim().toLowerCase());
             if (inputHash === correctLaunchCodeL4_hash) { level4Feedback.textContent = "LAUNCH CODE VERIFIED. Accessing L5..."; setTimeout(startLevel5, 2000); }
             else { level4Feedback.textContent = "Invalid Code."; }
         }
-        submitLaunchCodeButtonL4.addEventListener('click', checkLaunchCodeL4);
+        
+        // --- LEVEL 5 LOGIC ---
         function startLevel5() { showActiveScreen('level5'); }
+        submitStatusButtonL5.addEventListener('click', checkMissionStatusL5);
         async function checkMissionStatusL5() {
             const inputHash = await sha256(missionStatusInputL5.value.trim().toLowerCase());
             if (inputHash === correctMissionStatusL5_hash) { level5Feedback.textContent = "STATUS CONFIRMED. Accessing L6..."; setTimeout(startLevel6, 2000); }
             else { level5Feedback.textContent = "Incorrect status."; }
         }
-        submitStatusButtonL5.addEventListener('click', checkMissionStatusL5);
+        
+        // --- LEVEL 6 LOGIC ---
         function startLevel6() { showActiveScreen('level6'); window.setTimeout(init, 0); }
+        submitAstronautButtonL6.addEventListener('click', checkAnswerL6);
         async function checkAnswerL6() {
             const inputHash = await sha256(removedAstronautInputL6.value.trim().toLowerCase());
             if (inputHash === correctAstronautL6_hash) { level6Feedback.textContent = "ANOMALY RESOLVED. Accessing final directive..."; setTimeout(startLevel7, 2000); }
             else { level6Feedback.textContent = "Incorrect."; }
         }
-        submitAstronautButtonL6.addEventListener('click', checkAnswerL6);
 
         // --- LEVEL 7 LOGIC ---
         async function startLevel7() {
             showActiveScreen('level7');
-            keywordInputL7.value = ""; keywordInputL7.disabled = false; submitKeywordButtonL7.disabled = false;
+            keywordInputL7.value = "";
             level7Feedback.textContent = "Analyze the commander's email for the keyword.";
-            switchTab('preview');
+            switchTab('preview'); // Default to the preview tab
+
             try {
                 const response = await fetch('commander.eml');
                 if (!response.ok) throw new Error('File not found: commander.eml');
                 
-                // NEW: Fetch the raw EML content as text
-                const rawEmlText = await response.text();
+                const buffer = await response.arrayBuffer();
 
-                // 1. Populate the Raw Source view and highlight the clue
+                // 1. Convert buffer to text for the Raw Source view
+                const rawEmlText = new TextDecoder().decode(buffer);
+                
+                // Highlight the clue in the raw text and display it
                 const highlightedHtml = rawEmlText.replace(
                     'TURINGMACHINE',
                     '<span class="highlighted-clue">TURINGMACHINE</span>'
                 );
                 emailRawSource.innerHTML = highlightedHtml;
 
-                // 2. Parse the raw text to populate the Preview view
-                new EmlParser(rawEmlText).parse((err, result) => {
+                // 2. Parse the buffer to populate the Preview view
+                new EmlReader(buffer).parse((err, result) => {
                     if (err || !result) {
                         console.error("EML Parse Error:", err);
                         document.getElementById('email-subject').textContent = 'Error parsing email';
@@ -579,7 +583,10 @@
         }
 
         // --- GAME COMPLETE LOGIC ---
-        function startGameComplete() { showActiveScreen('gameComplete'); launchFireworks(); }
+        function startGameComplete() {
+            showActiveScreen('gameComplete');
+            launchFireworks();
+        }
         function launchFireworks() {
             const container = levelScreens['gameComplete'];
             for (let i = 0; i < 10; i++) { setTimeout(() => createFireworkBurst(container), i * 500); }
