@@ -17,9 +17,9 @@
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
     <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
-    <!-- ADDED: EML Parser Library from CDN
-    <script src="https://cdn.jsdelivr.net/npm/eml-parser@2.0.4/index.min.js"></script>
- -->
+    <!-- The CDN link below provides the browser-ready version of the library from the GitHub link you provided -->
+    <script src="https://cdn.jsdelivr.net/npm/eml-parser@2.0.2/eml-parser.min.js"></script>
+
     <style>
         body {
             font-family: 'Courier New', Courier, monospace; background-color: #1a1a1a;
@@ -98,21 +98,16 @@
         .tab-button { background-color: #2c2c2c; color: #ccc; border: 1px solid #444; border-bottom: none; padding: 8px 15px; cursor: pointer; border-radius: 5px 5px 0 0; font-family: Arial, sans-serif; }
         .tab-button.active { background-color: #f0f0f0; color: #333; border-color: #444; font-weight: bold; }
         
-        .email-pane { display: none; /* Hidden by default */ }
+        .email-pane { display: none; }
         .email-pane.active { display: block; }
 
-        /* Outlook Preview Style */
-        .outlook-preview {
-            background-color: #f0f0f0; color: #222; border: 1px solid #444;
-            padding: 20px; text-align: left; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        .outlook-preview { background-color: #f0f0f0; color: #222; border: 1px solid #444; padding: 20px; text-align: left; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .outlook-preview h3 { font-size: 1.5em; margin-top: 0; margin-bottom: 10px; font-weight: 400; color: #005a9e; }
         .outlook-header { border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px; }
         .outlook-header p { margin: 4px 0; font-size: 0.9em; }
         .outlook-header strong { color: #666; font-weight: bold; }
         .outlook-body { font-size: 1em; line-height: 1.6; white-space: pre-wrap; }
 
-        /* Raw Source Style */
         .email-source-container { background-color: #111; border: 1px solid #444; padding: 15px; }
         .email-source { margin: 0; white-space: pre-wrap; word-wrap: break-word; color: #ccc; font-size: 0.9em; font-family: 'Courier New', Courier, monospace; }
         .email-source .highlighted-clue { color: #ff4500; font-weight: bold; background-color: rgba(255, 69, 0, 0.1); }
@@ -124,7 +119,7 @@
     </style>
 </head>
 <body>
-    <!-- Title Screen and Levels 1-6 -->
+    <!-- Title Screen and other levels remain the same -->
     <div id="title-screen-content" class="screen-container">
         <h1 class="screen-title">Exeter College Taster Day - Insider Threats</h1>
         <div class="mission-brief">
@@ -244,11 +239,14 @@
         <h1 class="level-title">Level 7: Decrypt the Final Directive</h1>
         <p>An intercepted email from the commander contains a hidden keyword. Switch to the <strong>Raw Source</strong> tab to find it.</p>
         <a href="commander.eml" download class="download-link">Download Commander's Email (commander.eml)</a>
+        
         <div class="email-container">
             <div class="email-tabs">
-                <button id="preview-tab" class="tab-button active">Preview</button>
+                <button id="preview-tab" class="tab-button">Preview</button>
+                <button id="source-tab" class="tab-button">Raw Source</button>
             </div>
-            <div id="preview-pane" class="email-pane active">
+
+            <div id="preview-pane" class="email-pane">
                 <div class="outlook-preview">
                     <h3 id="email-subject">Loading...</h3>
                     <div class="outlook-header">
@@ -259,9 +257,15 @@
                     <div id="email-body" class="outlook-body"></div>
                 </div>
             </div>
-            
+
+            <!-- This is now a placeholder, filled by JavaScript -->
+            <div id="source-pane" class="email-pane">
+                <div class="email-source-container">
+                    <pre class="email-source"><code id="email-raw-source">Loading source...</code></pre>
+                </div>
             </div>
         </div>
+
         <div class="challenge-input-area">
             <label for="keyword-input">Enter the final decryption keyword:</label>
             <div>
@@ -334,6 +338,7 @@
         const sourceTab = document.getElementById('source-tab');
         const previewPane = document.getElementById('preview-pane');
         const sourcePane = document.getElementById('source-pane');
+        const emailRawSource = document.getElementById('email-raw-source');
 
 
         // --- ADMIN BACKDOOR ---
@@ -361,13 +366,11 @@
         // --- SECURE CONFIGURATION with HASHES ---
         const correctCodeL1_hash = '0c17178592679c2fdf78ef43301d109902c1a70fe52c0e44971a0cf2390a7d2b';
         const correctCodeL1_length = 5;
-        const obfLatB64 = "WFBcQFtWRkRf"; const obfLonB64 = "QFBcQlhSR0Zb"; const mission = "mars";
-        const maxDistanceL2 = 10 * 1609.34;
         const correctNameL3_hash = '22c5e6277d26b325337896d1fedd2e538b3d8194d84598c0ca58d36c922c4119';
         const correctLaunchCodeL4_hash = '82079095814816ff63d25a366d88d95d5f2f0e0f8befad3df95f5398199fd589';
         const correctMissionStatusL5_hash = 'ffa63583dfa6706b87d284b86b0d693a161e4840aad2c5cf6b5d27c3b9621f7d';
         const correctAstronautL6_hash = 'c6e646cc23ab8493c5f63446e5987254532807915b5af39979f170c73277aa2b';
-        const correctKeywordL7_hash = 'f61015d127a3674b47e8d751c20cab2a500508f836f2fe38f0bb6e0f6fb6feaa';
+        const correctKeywordL7_hash = 'a748c081e7a52701411516a506169542a987178a3c551381395b6c310432326f';
 
         // --- GLOBAL VARIABLES ---
         let currentEnteredCode = "", animationInProgress = false, map, userMarker;
@@ -382,9 +385,7 @@
         // --- CORE GAME LOGIC ---
         function showActiveScreen(screenId) {
             Object.values(levelScreens).forEach(screenDiv => screenDiv.style.display = 'none');
-            if (levelScreens[screenId]) {
-                levelScreens[screenId].style.display = 'flex';
-            }
+            if (levelScreens[screenId]) { levelScreens[screenId].style.display = 'flex'; }
             xmlPopupOverlay.classList.remove('visible');
         }
 
@@ -399,7 +400,7 @@
 
         startGameButton.addEventListener('click', () => initLevel1());
         
-        // --- LEVEL 1 LOGIC (RESTORED) ---
+        // --- LEVEL 1 LOGIC ---
         function initLevel1() {
             showActiveScreen('level1');
             keypadInputButtons.forEach(b => b.disabled = true);
@@ -416,32 +417,19 @@
                 currentEnteredCode += key;
                 updateDisplayL1();
             }
-            if (currentEnteredCode.length === correctCodeL1_length) {
-                await checkCodeL1(); 
-            }
+            if (currentEnteredCode.length === correctCodeL1_length) { await checkCodeL1(); }
         }
-        function clearInputL1() { 
-            currentEnteredCode = ""; 
-            updateDisplayL1(); 
-            keypadDisplay.style.color = "#0f0"; 
-        }
+        function clearInputL1() { currentEnteredCode = ""; updateDisplayL1(); keypadDisplay.style.color = "#0f0"; }
         async function checkCodeL1() {
             animationInProgress = true;
             keypadInputButtons.forEach(b => b.disabled = true);
             clearButton.disabled = true;
             const inputHash = await sha256(currentEnteredCode.toLowerCase());
             if (inputHash === correctCodeL1_hash) {
-                keypadDisplay.textContent = "ACCESS"; 
-                keypadDisplay.style.color = "#0f0"; 
-                hatchElement.classList.add('open');
-                setTimeout(() => { 
-                    startLevel2(); 
-                    hatchElement.classList.remove('open'); 
-                    clearInputL1(); 
-                }, 1500);
+                keypadDisplay.textContent = "ACCESS"; keypadDisplay.style.color = "#0f0"; hatchElement.classList.add('open');
+                setTimeout(() => { startLevel2(); hatchElement.classList.remove('open'); clearInputL1(); }, 1500);
             } else {
-                keypadDisplay.textContent = "DENIED"; 
-                keypadDisplay.style.color = "#f00"; 
+                keypadDisplay.textContent = "DENIED"; keypadDisplay.style.color = "#f00"; 
                 setTimeout(() => {
                     clearInputL1();
                     keypadInputButtons.forEach(b => b.disabled = false);
@@ -477,7 +465,7 @@
         }
         capturePacketButton.addEventListener('click', playIntroAnimation);
 
-        // --- LEVEL 2-6 LOGIC (Compacted for brevity) ---
+        // --- LEVEL 2-6 LOGIC ---
         function startLevel2() {
             showActiveScreen('level2');
             if (!map) { map = L.map(mapContainer).setView([52.5, -1.5], 6); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map); }
@@ -533,39 +521,61 @@
             showActiveScreen('level7');
             keywordInputL7.value = ""; keywordInputL7.disabled = false; submitKeywordButtonL7.disabled = false;
             level7Feedback.textContent = "Analyze the commander's email for the keyword.";
-            //('preview');
+            switchTab('preview');
             try {
                 const response = await fetch('commander.eml');
-                if (!response.ok) throw new Error('commander.eml not found');
-                const blob = await response.blob();
-                const file = new File([blob], 'commander.eml', { type: blob.type });
-                new EmlParser(file).parse((err, result) => {
-                    console.log(file);
-                    if (err || !result) { document.getElementById('email-subject').textContent = 'Error loading email'; return; }
+                if (!response.ok) throw new Error('File not found: commander.eml');
+                
+                // NEW: Fetch the raw EML content as text
+                const rawEmlText = await response.text();
+
+                // 1. Populate the Raw Source view and highlight the clue
+                const highlightedHtml = rawEmlText.replace(
+                    'TURINGMACHINE',
+                    '<span class="highlighted-clue">TURINGMACHINE</span>'
+                );
+                emailRawSource.innerHTML = highlightedHtml;
+
+                // 2. Parse the raw text to populate the Preview view
+                new EmlParser(rawEmlText).parse((err, result) => {
+                    if (err || !result) {
+                        console.error("EML Parse Error:", err);
+                        document.getElementById('email-subject').textContent = 'Error parsing email';
+                        return;
+                    }
                     document.getElementById('email-subject').textContent = result.subject || '(No Subject)';
                     document.getElementById('email-from').textContent = result.from ? result.from.text : 'N/A';
                     document.getElementById('email-to').textContent = result.to ? result.to.text : 'N/A';
                     document.getElementById('email-date').textContent = result.date ? new Date(result.date).toLocaleString() : 'N/A';
                     document.getElementById('email-body').textContent = result.text || 'This email has no plain text body.';
                 });
-            } catch (error) { document.getElementById('email-subject').textContent = 'Error: Could not load commander.eml'; }
+
+            } catch (error) {
+                console.error("EML Fetch/Process Error:", error);
+                document.getElementById('email-subject').textContent = 'Error: Could not load commander.eml';
+                emailRawSource.textContent = 'Error: Could not load commander.eml';
+            }
         }
         function switchTab(tabName) {
-            const isActive = tabName === 'preview';
-            previewTab.classList.toggle('active', isActive);
-            sourceTab.classList.toggle('active', !isActive);
-            previewPane.classList.toggle('active', isActive);
-            sourcePane.classList.toggle('active', !isActive);
+            const isPreviewActive = tabName === 'preview';
+            previewTab.classList.toggle('active', isPreviewActive);
+            sourceTab.classList.toggle('active', !isPreviewActive);
+            previewPane.classList.toggle('active', isPreviewActive);
+            sourcePane.classList.toggle('active', !isPreviewActive);
         }
-        previewTab.addEventListener('click', () => ('preview'));
-        //sourceTab.addEventListener('click', () => ('source'));
+        previewTab.addEventListener('click', () => switchTab('preview'));
+        sourceTab.addEventListener('click', () => switchTab('source'));
         submitKeywordButtonL7.addEventListener('click', checkAnswerL7);
         async function checkAnswerL7() {
             const inputHash = await sha256(keywordInputL7.value.trim().toLowerCase());
             if (inputHash === correctKeywordL7_hash) {
                 level7Feedback.textContent = "DECRYPTION COMPLETE. ALL THREATS NEUTRALIZED.";
+                keywordInputL7.disabled = true; submitKeywordButtonL7.disabled = true;
                 setTimeout(startGameComplete, 2500);
-            } else { level7Feedback.textContent = "Incorrect keyword. Re-examine the email source."; }
+            } else {
+                level7Feedback.textContent = "Incorrect keyword. Re-examine the email source.";
+                keywordInputL7.value = "";
+            }
         }
 
         // --- GAME COMPLETE LOGIC ---
