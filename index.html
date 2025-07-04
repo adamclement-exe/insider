@@ -310,14 +310,15 @@ class EmlReader {
                 redXImg.setAttribute('src', 'https://adamclement-exe.github.io/insider/broken.png');
                 redXImg.setAttribute('alt', 'Broken Image');
                 redXImg.setAttribute('style', 'width: 24px; height: 24px;');
-                img.parentNode.replaceChild(redXImg, img); // Replace invalid image with red X
-            } else if (img.getAttribute('alt')) {
-                // Only replace with alt text if the image is valid
+                redXImg.setAttribute('data-processed', 'true'); // Mark as processed to avoid further changes
+                img.parentNode.replaceChild(redXImg, img);
+            } else if (img.getAttribute('alt') && !img.getAttribute('data-processed')) {
+                // Only replace with alt text if the image is valid and not processed
                 console.log('Keeping image with alt:', img.getAttribute('alt'));
                 const textNode = doc.createTextNode(img.getAttribute('alt'));
                 img.parentNode.replaceChild(textNode, img);
-            } else {
-                // Remove image if valid but no alt text
+            } else if (!img.getAttribute('alt') && !img.getAttribute('data-processed')) {
+                // Remove image if valid but no alt text and not processed
                 img.parentNode.removeChild(img);
             }
         });
