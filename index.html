@@ -446,23 +446,6 @@ class EmlReader {
     }
 }
 
-    getSubject() { return this._decodeHeader(this.headers['subject']); }
-    getFrom() { return this._parseAddress(this.headers['from']); }
-    getTo() { return this._parseAddress(this.headers['to']); }
-    getDate() { return this.headers['date'] ? new Date(this.headers['date']) : null; }
-    getMessageText() { return this.body; }
-    isHtmlOutput() { return this.isHtml; }
-    getRawHtml() { return this.isHtml ? this.body : ''; }
-
-    _parseAddress(headerValue) {
-        if (!headerValue) return null;
-        const match = headerValue.match(/(.*)<(.*)>/);
-        if (match) {
-            return { name: this._decodeHeader(match[1].trim()), address: match[2].trim(), text: headerValue };
-        }
-        return { name: null, address: headerValue.trim(), text: headerValue };
-    }
-}
 
         
         const hatchElement = document.getElementById('the-hatch');
