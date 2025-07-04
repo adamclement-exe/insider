@@ -695,7 +695,7 @@
                 document.getElementById('email-to').textContent = toData ? toData.text : 'N/A';
                 const dateData = reader.getDate();
                 document.getElementById('email-date').textContent = dateData ? new Date(dateData).toLocaleString() : 'N/A';
-                document.getElementById('email-body').textContent = reader.getMessageText() || 'This email has no plain text body.';
+                document.getElementById('email-body').innerHTML = reader.getMessageText() || 'This email has no plain text body.';
 
             } catch (error) {
                 console.error("EML Fetch/Process Error:", error);
