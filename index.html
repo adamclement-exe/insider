@@ -284,6 +284,594 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
     
+    <script>
+        const hatchElement = document.getElementById('the-hatch');
+        const keypadDisplay = document.getElementById('keypad-display');
+        const keypadInputButtons = document.querySelectorAll('.keypad-grid button[data-key]');
+        const clearButton = document.getElementById('keypad-clear-button');
+        const capturePacketButton = document.getElementById('capture-packet-button');
+        const xmlPopupOverlay = document.getElementById('xml-popup-overlay');
+        const xmlContentArea = document.getElementById('xml-content-area');
+        const closePopupButton = document.getElementById('close-popup');
+        const levelScreens = {
+            'title': document.getElementById('title-screen-content'),
+            'level1': document.getElementById('level1-content'), 'level2': document.getElementById('level2-content'),
+            'level3': document.getElementById('level3-content'), 'level4': document.getElementById('level4-content'),
+            'level5': document.getElementById('level5-content'), 'level6': document.getElementById('level6-content'),
+            'level7': document.getElementById('level7-content'),
+            'gameComplete': document.getElementById('game-complete-content')
+        };
+        const startGameButton = document.getElementById('start-game-button');
+        const mapSearchInput = document.getElementById('map-search-input');
+        const mapSearchButton = document.getElementById('map-search-button');
+        const mapContainer = document.getElementById('map-container');
+        const mapFeedback = document.getElementById('map-feedback');
+        const baseImage = document.getElementById('base-image');
+        const pdfViewerContainerL3 = document.getElementById('pdf-viewer-container-l3');
+        const nameInputL3 = document.getElementById('name-input');
+        const submitNameButtonL3 = document.getElementById('submit-name-button');
+        const level3Feedback = document.getElementById('level3-feedback');
+        const pdfViewerContainerL4 = document.getElementById('pdf-viewer-container-l4');
+        const launchCodeInputL4 = document.getElementById('launch-code-input');
+        const submitLaunchCodeButtonL4 = document.getElementById('submit-launch-code-button');
+        const level4Feedback = document.getElementById('level4-feedback');
+        const missionStatusInputL5 = document.getElementById('mission-status-input');
+        const submitStatusButtonL5 = document.getElementById('submit-status-button');
+        const level5Feedback = document.getElementById('level5-feedback');
+        const removedAstronautInputL6 = document.getElementById('removed-astronaut-input');
+        const submitAstronautButtonL6 = document.getElementById('submit-astronaut-button');
+        const level6Feedback = document.getElementById('level6-feedback');
+        const keywordInputL7 = document.getElementById('keyword-input');
+        const submitKeywordButtonL7 = document.getElementById('submit-keyword-button');
+        const level7Feedback = document.getElementById('level7-feedback');
+        const previewTab = document.getElementById('preview-tab');
+        const sourceTab = document.getElementById('source-tab');
+        const previewPane = document.getElementById('preview-pane');
+        const sourcePane = document.getElementById('source-pane');
+        const emailRawSource = document.getElementById('email-raw-source');
+
+        function jumpToLevel(level) {
+            const levelNum = parseInt(level, 10);
+            if (isNaN(levelNum) || levelNum < 1 || levelNum > 7) { console.error("Invalid level. Please use jumpToLevel(1) through jumpToLevel(7)."); return; }
+            console.log(`ADMIN: Jumping to Level ${levelNum}...`);
+            switch (levelNum) {
+                case 1: initLevel1(); break; case 2: startLevel2(); break;
+                case 3: startLevel3(); break; case 4: startLevel4(); break;
+                case 5: startLevel5(); break; case 6: startLevel6(); break;
+                case 7: startLevel7(); break;
+            }
+        }
+        window.jumpToLevel = jumpToLevel;
+
+        async function sha256(str) {
+            const textAsBuffer = new TextEncoder().encode(str);
+            const hashBuffer = await window.crypto.subtle.digest('SHA-256', textAsBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        const correctCodeL1_hash = '0c17178592679c2fdf78ef43301d109902c1a70fe52c0e44971a0cf2390a7d2b';
+        const correctCodeL1_length = 5;
+        const correctNameL3_hash = '22c5e6277d26b325337896d1fedd2e538b3d8194d84598c0ca58d36c922c4119';
+        const correctLaunchCodeL4_hash = '82079095814816ff63d25a366d88d95d5f2f0e0f8befad3df95f5398199fd589';
+        const correctMissionStatusL5_hash = 'ffa63583dfa6706b87d284b86b0d693a161e4840aad2c5cf6b5d27c3b9621f7d';
+        const correctAstronautL6_hash = 'c6e646cc23ab8493c5f63446e5987254532807915b5af39979f170c73277aa2b';
+        const correctKeywordL7_hash = 'a748c081e7a52701411516a506169542a987178a3c551381395b6c310432326f';
+        let currentEnteredCode = "", animationInProgress = false, map, userMarker;
+        const xmlData = `<secure-access><level>5</level><restricted>true</restricted><uid>49</uid><base64>S2V5cGFkIGNvZGUgZm9yIGxldmVsIDUgZW50cnkgaXMgNzg2NEI=</base64></secure-access>`.trim();
+
+        function init() {
+          var odfelement = document.getElementById("odf"),
+              odfcanvas = new odf.OdfCanvas(odfelement);
+          odfcanvas.load("crew-list-final-version.odt");
+        }
+        
+        function showActiveScreen(screenId) {
+            Object.values(levelScreens).forEach(screenDiv => screenDiv.style.display = 'none');
+            if (levelScreens[screenId]) { levelScreens[screenId].style.display = 'flex'; }
+            xmlPopupOverlay.classList.remove('visible');
+        }
+
+        function embedPDF(containerElement, pdfFileName) {
+            containerElement.innerHTML = '';
+            const pdfEmbed = document.createElement('embed');
+            pdfEmbed.src = pdfFileName; pdfEmbed.type = 'application/pdf';
+            pdfEmbed.style.width = '100%'; pdfEmbed.style.height = '100%';
+            pdfEmbed.onerror = () => { containerElement.innerHTML = `<p style="color: #f00; padding: 20px;">Error loading ${pdfFileName}.</p>`; };
+            containerElement.appendChild(pdfEmbed);
+        }
+
+        startGameButton.addEventListener('click', () => initLevel1());
+        
+        function initLevel1() {
+            showActiveScreen('level1');
+            keypadInputButtons.forEach(b => b.disabled = true);
+            clearButton.disabled = true;
+            capturePacketButton.disabled = false;
+            keypadDisplay.textContent = "LOCKED";
+            keypadDisplay.style.color = "#ff8c00";
+            currentEnteredCode = "";
+        }
+        function updateDisplayL1() { keypadDisplay.textContent = currentEnteredCode; }
+        async function handleKeyPressL1(key) {
+            if (animationInProgress) return;
+            if (currentEnteredCode.length < correctCodeL1_length) {
+                currentEnteredCode += key;
+                updateDisplayL1();
+            }
+            if (currentEnteredCode.length === correctCodeL1_length) { await checkCodeL1(); }
+        }
+        function clearInputL1() { currentEnteredCode = ""; updateDisplayL1(); keypadDisplay.style.color = "#0f0"; }
+        async function checkCodeL1() {
+            animationInProgress = true;
+            keypadInputButtons.forEach(b => b.disabled = true);
+            clearButton.disabled = true;
+            const inputHash = await sha256(currentEnteredCode.toLowerCase());
+            if (inputHash === correctCodeL1_hash) {
+                keypadDisplay.textContent = "ACCESS"; keypadDisplay.style.color = "#0f0"; hatchElement.classList.add('open');
+                setTimeout(() => { startLevel2(); hatchElement.classList.remove('open'); clearInputL1(); }, 1500);
+            } else {
+                keypadDisplay.textContent = "DENIED"; keypadDisplay.style.color = "#f00"; 
+                setTimeout(() => {
+                    clearInputL1();
+                    keypadInputButtons.forEach(b => b.disabled = false);
+                    clearButton.disabled = false;
+                    capturePacketButton.disabled = false;
+                    animationInProgress = false;
+                }, 1000);
+            }
+        }
+        keypadInputButtons.forEach(b => { b.addEventListener('click', () => { const k = b.dataset.key; handleKeyPressL1(k); }); });
+        clearButton.addEventListener('click', () => { if (!animationInProgress) clearInputL1(); });
+        function showXmlPopup() { xmlContentArea.textContent = xmlData; xmlPopupOverlay.classList.add('visible'); }
+        closePopupButton.addEventListener('click', () => { xmlPopupOverlay.classList.remove('visible'); });
+        function playIntroAnimation() {
+            animationInProgress = true;
+            capturePacketButton.disabled = true;
+            keypadDisplay.textContent = "";
+            let fake = "******", i = 0;
+            function type() {
+                if (i < fake.length) { keypadDisplay.textContent += fake[i]; i++; setTimeout(type, 200); }
+                else { 
+                    setTimeout(() => { keypadDisplay.textContent = "DECODING"; keypadDisplay.style.color = "#0f0"; }, 300);
+                    setTimeout(showXmlPopup, 1200);
+                    setTimeout(() => { 
+                        clearInputL1(); 
+                        keypadInputButtons.forEach(b => b.disabled = false);
+                        clearButton.disabled = false;
+                        keypadDisplay.textContent = "";
+                        animationInProgress = false;
+                    }, 3500);
+                }
+            } type();
+        }
+        capturePacketButton.addEventListener('click', playIntroAnimation);
+
+        function startLevel2() {
+            showActiveScreen('level2');
+            if (!map) { map = L.map(mapContainer).setView([52.5, -1.5], 6); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map); }
+            mapFeedback.textContent = "Scan Area.";
+        }
+        mapSearchButton.addEventListener('click', performMapSearchL2);
+        async function performMapSearchL2() {
+            const query = mapSearchInput.value.trim(); if (!query) return;
+            mapFeedback.textContent = `Scanning...`;
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=gb`);
+            const data = await response.json();
+            if (data && data.length > 0) {
+                const loc = data[0]; const latLng = L.latLng(parseFloat(loc.lat), parseFloat(loc.lon));
+                if (userMarker) map.removeLayer(userMarker);
+                userMarker = L.marker(latLng).addTo(map).bindPopup(`<b>${loc.display_name}</b>`).openPopup();
+                map.setView(latLng, 10);
+                if (loc.display_name.toLowerCase().includes("goonhilly")) {
+                    mapFeedback.textContent = `MISSION CONTROL CONFIRMED. Accessing L3...`; setTimeout(startLevel3, 2500);
+                } else { mapFeedback.textContent = `Negative contact at "${loc.display_name}". Recalibrate.`; }
+            } else { mapFeedback.textContent = `Location not found.`; }
+        }
+        
+        function startLevel3() { showActiveScreen('level3'); embedPDF(pdfViewerContainerL3, 'redacted.pdf'); }
+        submitNameButtonL3.addEventListener('click', checkNameL3);
+        async function checkNameL3() {
+            const inputHash = await sha256(nameInputL3.value.trim().toLowerCase());
+            if (inputHash === correctNameL3_hash) { level3Feedback.textContent = "IDENTITY CONFIRMED. Accessing L4..."; setTimeout(startLevel4, 2000); }
+            else { level3Feedback.textContent = "Incorrect. Subject unidentified."; }
+        }
+        
+        function startLevel4() { showActiveScreen('level4'); embedPDF(pdfViewerContainerL4, 'The Evolution and Impact of Rocket Ships.pdf'); }
+        submitLaunchCodeButtonL4.addEventListener('click', checkLaunchCodeL4);
+        async function checkLaunchCodeL4() {
+            const inputHash = await sha256(launchCodeInputL4.value.trim().toLowerCase());
+            if (inputHash === correctLaunchCodeL4_hash) { level4Feedback.textContent = "LAUNCH CODE VERIFIED. Accessing L5..."; setTimeout(startLevel5, 2000); }
+            else { level4Feedback.textContent = "Invalid Code."; }
+        }
+        
+        function startLevel5() { showActiveScreen('level5'); }
+        submitStatusButtonL5.addEventListener('click', checkMissionStatusL5);
+        async function checkMissionStatusL5() {
+            const inputHash = await sha256(missionStatusInputL5.value.trim().toLowerCase());
+            if (inputHash === correctMissionStatusL5_hash) { level5Feedback.textContent = "STATUS CONFIRMED. Accessing L6..."; setTimeout(startLevel6, 2000); }
+            else { level5Feedback.textContent = "Incorrect status."; }
+        }
+        
+        function startLevel6() { showActiveScreen('level6'); window.setTimeout(init, 0); }
+        submitAstronautButtonL6.addEventListener('click', checkAnswerL6);
+        async function checkAnswerL6() {
+            const inputHash = await sha256(removedAstronautInputL6.value.trim().toLowerCase());
+            if (inputHash === correctAstronautL6_hash) { level6Feedback.textContent = "ANOMALY RESOLVED. Accessing final directive..."; setTimeout(startLevel7, 2000); }
+            else { level6Feedback.textContent = "Incorrect."; }
+        }
+
+        async function startLevel7() {
+            showActiveScreen('level7');
+            keywordInputL7.value = "";
+            level7Feedback.textContent = "Analyze the commander's email for the keyword.";
+            switchTab('preview'); 
+
+            try {
+                const { EmlReader } = await import('./eml-parser.min.js');
+
+                const response = await fetch('commander.eml');
+                if (!response.ok) throw new Error('File not found: commander.eml');
+                
+                const buffer = await response.arrayBuffer();
+                const rawEmlText = new TextDecoder().decode(buffer);
+                
+                const highlightedHtml = rawEmlText.replace(
+                    'TURINGMACHINE',
+                    '<span class="highlighted-clue">TURINGMACHINE</span>'
+                );
+                emailRawSource.innerHTML = highlightedHtml;
+                
+                const reader = new EmlReader(buffer);
+                
+                document.getElementById('email-subject').textContent = reader.getSubject() || '(No Subject)';
+                const fromData = reader.getFrom();
+                document.getElementById('email-from').textContent = fromData ? fromData.text : 'N/A';
+                const toData = reader.getTo();
+                document.getElementById('email-to').textContent = toData ? toData.text : 'N/A';
+                const dateData = reader.getDate();
+                document.getElementById('email-date').textContent = dateData ? new Date(dateData).toLocaleString() : 'N/A';
+                document.getElementById('email-body').textContent = reader.getMessageText() || 'This email has no plain text body.';
+
+            } catch (error) {
+                console.error("EML Fetch/Process Error:", error);
+                document.getElementById('email-subject').textContent = 'Error: Could not load or parse commander.eml';
+                emailRawSource.textContent = 'Error: Could not load or parse commander.eml. Make sure eml-parser.min.js is in the same folder.';
+            }
+        }
+        function switchTab(tabName) {
+            const isPreviewActive = tabName === 'preview';
+            previewTab.classList.toggle('active', isPreviewActive);
+            sourceTab.classList.toggle('active', !isPreviewActive);
+            previewPane.classList.toggle('active', isPreviewActive);
+            sourcePane.classList.toggle('active', !isPreviewActive);
+        }
+        previewTab.addEventListener('click', () => switchTab('preview'));
+        sourceTab.addEventListener('click', () => switchTab('source'));
+        submitKeywordButtonL7.addEventListener('click', checkAnswerL7);
+        async function checkAnswerL7() {
+            const inputHash = await sha256(keywordInputL7.value.trim().toLowerCase());
+            if (inputHash === correctKeywordL7_hash) {
+                level7Feedback.textContent = "DECRYPTION COMPLETE. ALL THREATS NEUTRALIZED.";
+                keywordInputL7.disabled = true; submitKeywordButtonL7.disabled = true;
+                setTimeout(startGameComplete, 2500);
+            } else {
+                level7Feedback.textContent = "Incorrect keyword. Re-examine the email source.";
+                keywordInputL7.value = "";
+            }
+        }
+
+        function startGameComplete() {
+            showActiveScreen('gameComplete');
+            launchFireworks();
+        }
+        function launchFireworks() {
+            const container = levelScreens['gameComplete'];
+            for (let i = 0; i < 10; i++) { setTimeout(() => createFireworkBurst(container), i * 500); }
+        }
+        function createFireworkBurst(container) {
+            const burstX = Math.random() * 80 + 10; const burstY = Math.random() * 50 + 10;
+            const colors = ['#FF0000', '#FFA500', '#FFFF00', '#00FF00', '#00FFFF', '#FFFFFF'];
+            for (let i = 0; i < 80; i++) {
+                const p = document.createElement('div'); p.className = 'firework';
+                p.style.left = `${burstX}%`; p.style.top = `${burstY}%`;
+                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                const angle = Math.random() * 360; const dist = Math.random() * 120;
+                p.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+                p.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
+                container.appendChild(p); setTimeout(() => p.remove(), 1000);
+            }
+        }
+        
+        window.addEventListener('load', () => showActiveScreen('title'));
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exeter College Taster Day - Insider Threats</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace; background-color: #1a1a1a;
+            color: #eee; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; min-height: 100vh; margin: 0;
+        }
+
+        #odf{
+            width: 90%; max-width: 800px; height: 500px; margin: 20px auto;
+            background-color: #f8f8f8; color: #333; border: 1px solid #ccc;
+            border-radius: 3px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); 
+            padding: 2em; box-sizing: border-box; overflow-y: auto; 
+        }
+        
+        .screen-container { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
+        .level-title, .screen-title { color: #0f0; margin-bottom: 20px; text-align: center; }
+        .screen-title { font-size: 2.5em; margin-bottom: 30px;}
+
+        #title-screen-content { background-color: #111; border: 2px solid #0f0; padding: 40px; border-radius: 10px; max-width: 700px; box-shadow: 0 0 30px rgba(0, 255, 0, 0.2); }
+        #title-screen-content p { font-size: 1.1em; line-height: 1.6; margin-bottom: 15px; color: #ccc; }
+        #title-screen-content .mission-brief { text-align: left; margin-bottom: 30px; border-left: 3px solid #0f0; padding-left: 15px; }
+        #title-screen-content .mission-brief strong { color: #0f0; }
+        #start-game-button { background-color: #006400; color: #fff; padding: 15px 30px; font-size: 1.5em; border: 2px solid #0f0; border-radius: 8px; cursor: pointer; transition: background-color 0.3s, transform 0.1s; }
+        #start-game-button:hover { background-color: #008000; transform: scale(1.05); }
+        #start-game-button:active { transform: scale(1); }
+
+        .scene { display: flex; align-items: flex-end; gap: 50px; margin-top: 10px; }
+        
+        .rocket-body { width: 250px; height: 350px; background: linear-gradient(90deg, #b0b0b0, #e0e0e0, #b0b0b0); border: 2px solid #888; border-radius: 40px 40px 0 0; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 5px 0 10px rgba(0,0,0,0.2); perspective: 1000px; z-index: 1; }
+        .rocket-body::before { content: ""; position: absolute; width: 160px; height: 160px; top: calc(50% - 80px); left: calc(50% - 80px); background-color: #111; border: 5px solid #333; border-radius: 50%; box-shadow: inset 0 0 15px rgba(0,0,0,0.7); z-index: 0; }
+        .hatch { position: relative; z-index: 2; width: 160px; height: 160px; background: linear-gradient(135deg, #c0c0c0, #a0a0a0); border: 5px solid #666; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.4); transform-origin: left center; transition: transform 0.8s ease-in-out; }
+        .hatch.open { transform: rotateY(-110deg) scale(0.9); }
+        .hatch-window { width: 50px; height: 50px; background-color: #1a2a3a; border: 4px solid #555; border-radius: 50%; box-shadow: inset 0 0 10px rgba(0,0,0,0.7); }
+        .hatch-handle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 20px; height: 40px; background-color: #c0c0c0; border: 2px solid #555; border-radius: 5px; }
+
+        .keypad-area { display: flex; flex-direction: column; align-items: center; background-color: #4a4a4a; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        #capture-packet-button { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #0f0; background-color: #0a0; color: #222; cursor: pointer; font-family: 'Courier New', Courier, monospace; font-size: 1.1em; }
+        #capture-packet-button:hover { background-color: #0c0; }
+        #capture-packet-button:disabled { background-color: #555; color: #888; cursor: not-allowed; }
+
+        #keypad-display { width: 100%; height: 40px; background-color: #222; color: #0f0; border: 2px solid #555; border-radius: 5px; margin-bottom: 15px; font-size: 1.8em; text-align: center; letter-spacing: 2px; padding: 5px; box-sizing: border-box; user-select: none; }
+        .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .keypad-grid button { width: 60px; height: 60px; background-color: #666; color: white; border: 1px solid #888; border-radius: 8px; font-size: 1.5em; cursor: pointer; transition: background-color 0.2s, transform 0.1s; user-select: none; }
+        .keypad-grid button:hover { background-color: #777; }
+        .keypad-grid button:active { background-color: #555; transform: scale(0.95); }
+        .keypad-grid button:disabled { background-color: #444; color: #777; cursor: not-allowed; }
+
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .popup-overlay.visible { display: flex; }
+        .popup-window { background-color: #2c2c2c; border: 2px solid #0a0; padding: 20px; border-radius: 8px; box-shadow: 0 0 25px rgba(0, 200, 0, 0.3); width: 80%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; }
+        .popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; color: #0f0; font-size: 1.2em; }
+        #close-popup { background: none; border: 1px solid #0f0; color: #0f0; font-size: 1.2em; cursor: pointer; padding: 5px 10px; border-radius: 3px; }
+        .popup-content { background-color: #1a1a1a; border: 1px solid #444; padding: 15px; overflow-y: auto; flex-grow: 1; }
+        .popup-content pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; color: #ccc; }
+
+        #level3-content #pdf-viewer-container-l3, #level4-content #pdf-viewer-container-l4 { width: 90%; max-width: 800px; height: 450px; margin: 15px auto; border: 2px solid #0f0; background-color: #111; }
+        #level3-content #pdf-viewer-container-l3 embed, #level4-content #pdf-viewer-container-l4 embed { width: 100%; height: 100%; border: none; }
+
+        .challenge-input-area { margin-top: 15px; text-align: center; }
+        .challenge-input-area label { display: block; margin-bottom: 10px; color: #0f0; }
+        .challenge-input-area input[type="text"] { width: 250px; padding: 10px; margin-right: 10px; border-radius: 5px; border: 1px solid #0f0; background-color: #333; color: #0f0; font-family: 'Courier New', Courier, monospace; }
+        .challenge-input-area button { padding: 10px 15px; border-radius: 5px; border: 1px solid #0f0; background-color: #0a0; color: #222; cursor: pointer; font-family: 'Courier New', Courier, monospace; margin-top: 5px; }
+        .challenge-input-area button:hover { background-color: #0c0; }
+        .challenge-input-area button:disabled { background-color: #555; cursor: not-allowed;}
+        .feedback-text { margin-top: 10px; color: #0f0; min-height: 1.2em; }
+
+        #level2-content img { max-width: 90%; max-height: 300px; margin-bottom: 20px; border: 3px solid #0f0; border-radius: 5px; background-color: #111; }
+        #level2-content #map-container { height: 400px; width: 80%; max-width: 700px; margin: 20px auto; border: 2px solid #0f0; border-radius: 5px; }
+
+        .download-link { display: inline-block; padding: 10px 20px; margin: 15px auto; background-color: #004400; color: #0f0; border: 1px solid #0f0; text-decoration: none; border-radius: 5px; }
+        .download-link:hover { background-color: #006600; }
+        
+        #level7-content .email-container { width: 90%; max-width: 800px; margin: 10px auto; }
+        .email-tabs { border-bottom: 1px solid #444; margin-bottom: 0; padding-left: 10px; }
+        .tab-button { background-color: #2c2c2c; color: #ccc; border: 1px solid #444; border-bottom: none; padding: 8px 15px; cursor: pointer; border-radius: 5px 5px 0 0; font-family: Arial, sans-serif; }
+        .tab-button.active { background-color: #f0f0f0; color: #333; border-color: #444; font-weight: bold; }
+        
+        .email-pane { display: none; }
+        .email-pane.active { display: block; }
+
+        .outlook-preview { background-color: #f0f0f0; color: #222; border: 1px solid #444; padding: 20px; text-align: left; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .outlook-preview h3 { font-size: 1.5em; margin-top: 0; margin-bottom: 10px; font-weight: 400; color: #005a9e; }
+        .outlook-header { border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px; }
+        .outlook-header p { margin: 4px 0; font-size: 0.9em; }
+        .outlook-header strong { color: #666; font-weight: bold; }
+        .outlook-body { font-size: 1em; line-height: 1.6; white-space: pre-wrap; }
+
+        .email-source-container { background-color: #111; border: 1px solid #444; padding: 15px; }
+        .email-source { margin: 0; white-space: pre-wrap; word-wrap: break-word; color: #ccc; font-size: 0.9em; font-family: 'Courier New', Courier, monospace; }
+        .email-source .highlighted-clue { color: #ff4500; font-weight: bold; background-color: rgba(255, 69, 0, 0.1); }
+        
+        #game-complete-content { text-align: center; color: #0f0; position: relative; width: 100%; height: 100vh; background-color: #111; }
+        #game-complete-content h1 { font-size: 3em; margin-top: 30vh; }
+        .firework { position: absolute; width: 4px; height: 4px; background-color: white; border-radius: 50%; opacity: 1; animation: firework-burst 1s ease-out forwards; }
+        @keyframes firework-burst { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(20) translate(var(--tx), var(--ty)); opacity: 0; } }
+    </style>
+</head>
+<body>
+    
+    <div id="title-screen-content" class="screen-container">
+        <h1 class="screen-title">Exeter College Taster Day - Insider Threats</h1>
+        <div class="mission-brief">
+            <p><strong>Agent, your mission is critical:</strong></p>
+            <p><strong>Level 1: Breach the Rocket's Defenses</strong> - Infiltrate the launch system by decoding a captured data packet to unlock the rocket's access hatch.</p>
+            <p><strong>Level 2: Track the Command Center</strong> - Use a covertly obtained image to locate the enemy's Mission Control within a critical 10-mile radius.</p>
+            <p><strong>Level 3: Unmask the Mastermind</strong> - Decrypt a redacted document to reveal the identity of the mission's commander.</p>
+            <p><strong>Level 4: Crack the Launch Code</strong> - Extract a hidden 6-character code from a classified document to gain control of the rocket's launch sequence.</p>
+            <p><strong>Level 5: Access Secure Intelligence</strong> - Break into a protected spreadsheet to uncover the mission status of a key operative.</p>
+            <p><strong>Level 6: Uncover the Missing Person</strong> - Investigate a last-minute crew change to identify the astronaut removed from the mission roster.</p>
+            <p><strong>Level 7: Decrypt the Final Directive</strong> - An intercepted email from the commander contains a final, encrypted keyword. Analyze the email's raw source to uncover the hidden term.</p>
+        </div>
+        <p>The success of this operation hinges on your skills. Humanity's future is in your hands, Agent.</p>
+        <button id="start-game-button">Initiate Mission</button>
+    </div>
+
+    <div id="level1-content" class="screen-container" style="display: none;">
+        <h1 class="level-title">Level 1: Breach the Rocket's Defenses</h1>
+        <div class="scene">
+            <div class="rocket-body">
+                <div class="hatch" id="the-hatch">
+                    <div class="hatch-window"></div>
+                    <div class="hatch-handle"></div>
+                </div>
+            </div>
+            <div class="keypad-area">
+                <button id="capture-packet-button">Capture Packet</button>
+                <div id="keypad-display"></div>
+                <div class="keypad-grid">
+                    <button data-key="1">1</button> <button data-key="2">2</button> <button data-key="3">3</button>
+                    <button data-key="4">4</button> <button data-key="5">5</button> <button data-key="6">6</button>
+                    <button data-key="7">7</button> <button data-key="8">8</button> <button data-key="9">9</button>
+                    <button data-key="A">A</button> <button data-key="0">0</button> <button data-key="B">B</button>
+                    <button id="keypad-clear-button" style="grid-column: span 3;">CLR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="level2-content" class="screen-container" style="display: none;">
+        <h1 class="level-title">Level 2: Track the Command Center</h1>
+        <img src="base.jpg" alt="Intercepted Image - Potential Target" id="base-image">
+        <h2>Objective: Locate the Hidden Base</h2>
+        <p>An intercepted image reveals clues to the location of the enemy's Mission Control. Your task is to pinpoint its coordinates.</p>
+        <p>Use the map to identify a location within a 10-mile radius of the suspected launch command zone.</p>
+        <div class="challenge-input-area">
+            <input autocomplete="off" type="text" id="map-search-input" placeholder="e.g., City, Town, Region">
+            <button id="map-search-button">Scan Area</button>
+        </div>
+        <div id="map-container"></div>
+        <p id="map-feedback" class="feedback-text"></p>
+    </div>
+
+    <div id="level3-content" class="screen-container" style="display: none;">
+        <h1 class="level-title">Level 3: Unmask the Mastermind</h1>
+        <h2>Objective: Identify the Mission Commander</h2>
+        <p>A classified, heavily redacted document holds the key to the identity of the mission's orchestrator. Scrutinize it to uncover their full name.</p>
+        <div id="pdf-viewer-container-l3"></div>
+        <div class="challenge-input-area">
+            <label for="name-input">Who is the commander behind this mission? Enter their full name:</label>
+            <div>
+                <input autocomplete="off" type="text" id="name-input" placeholder="Enter full name">
+                <button id="submit-name-button">Submit Name</button>
+            </div>
+            <p id="level3-feedback" class="feedback-text"></p>
+        </div>
+    </div>
+
+    <div id="level4-content" class="screen-container" style="display: none;">
+        <h1 class="level-title">Level 4: Crack the Launch Code</h1>
+        <h2>Objective: Secure the Launch Sequence</h2>
+        <p>Intelligence indicates a 6-character launch code is concealed within a technical document. Find and extract it to take control of the rocket.</p>
+        <div id="pdf-viewer-container-l4"></div>
+        <div class="challenge-input-area">
+            <label for="launch-code-input">Enter the 6-character launch code:</label>
+            <div>
+                <input autocomplete="off" type="text" id="launch-code-input" placeholder="Enter launch code" maxlength="6">
+                <button id="submit-launch-code-button">Verify Code</button>
+            </div>
+            <p id="level4-feedback" class="feedback-text"></p>
+        </div>
+    </div>
+
+    <div id="level5-content" class="screen-container" style="display: none;">
+        <h1 class="level-title">Level 5: Access Secure Intelligence</h1>
+        <h2>Objective: Retrieve Critical Data</h2>
+        <p>A locked spreadsheet contains vital mission details. Break its security to extract the mission status for operative Richard Anderson, located on Sheet 2.</p>
+        <a href="locked.xlsx" download class="download-link">Download Secured Document (locked.xlsx)</a>
+        <div class="challenge-input-area">
+            <label for="mission-status-input">What is the mission status for Richard Anderson?</label>
+            <div>
+                <input autocomplete="off" type="text" id="mission-status-input" placeholder="Enter mission status">
+                <button id="submit-status-button">Submit Data</button>
+            </div>
+            <p id="level5-feedback" class="feedback-text"></p>
+        </div>
+    </div>
+
+    <div id="level6-content" class="screen-container" style="display: none;">
+        <h1 class="level-title">Level 6: Uncover the Missing Person</h1>
+        <h2>Objective: Identify the Omitted Astronaut</h2>
+        <p>A covert source reveals a last-minute crew change was made in secret. Someone was removed from the mission roster without public knowledge.</p>
+        <p>Examine the final flight roster to identify the astronaut who was excluded from the mission.</p>
+        <a href="crew-list-final-version.odt" class="download-link">Download .odt file</a>
+        <div id="odf"></div>
+        <div class="challenge-input-area">
+            <label for="removed-astronaut-input">Who was removed from the final flight crew?</label>
+            <div>
+                <input autocomplete="off" type="text" id="removed-astronaut-input" placeholder="Enter full name">
+                <button id="submit-astronaut-button">Submit Name</button>
+            </div>
+            <p id="level6-feedback" class="feedback-text"></p>
+        </div>
+    </div>
+    
+    <div id="level7-content" class="screen-container" style="display: none;">
+        <h1 class="level-title">Level 7: Decrypt the Final Directive</h1>
+        <p>An intercepted email from the commander contains a hidden keyword. Switch to the <strong>Raw Source</strong> tab to find it.</p>
+        <a href="commander.eml" download class="download-link">Download Commander's Email (commander.eml)</a>
+        <div class="email-container">
+            <div class="email-tabs">
+                <button id="preview-tab" class="tab-button">Preview</button>
+                <button id="source-tab" class="tab-button">Raw Source</button>
+            </div>
+            <div id="preview-pane" class="email-pane">
+                <div class="outlook-preview">
+                    <h3 id="email-subject">Loading...</h3>
+                    <div class="outlook-header">
+                        <p><strong>From:</strong> <span id="email-from"></span></p>
+                        <p><strong>Sent:</strong> <span id="email-date"></span></p>
+                        <p><strong>To:</strong> <span id="email-to"></span></p>
+                    </div>
+                    <div id="email-body" class="outlook-body"></div>
+                </div>
+            </div>
+            <div id="source-pane" class="email-pane">
+                <div class="email-source-container">
+                    <pre class="email-source"><code id="email-raw-source">Loading source...</code></pre>
+                </div>
+            </div>
+        </div>
+        <div class="challenge-input-area">
+            <label for="keyword-input">Enter the final decryption keyword:</label>
+            <div>
+                <input autocomplete="off" type="text" id="keyword-input" placeholder="Enter keyword">
+                <button id="submit-keyword-button">Submit Keyword</button>
+            </div>
+            <p id="level7-feedback" class="feedback-text"></p>
+        </div>
+    </div>
+
+    <div id="game-complete-content" class="screen-container" style="display: none;">
+        <h1>MISSION ACCOMPLISHED!</h1>
+        <p>Congratulations, Agent. You have thwarted the threat and secured the mission.</p>
+    </div>
+
+    <div class="popup-overlay" id="xml-popup-overlay">
+        <div class="popup-window">
+            <div class="popup-header">
+                <h2>Intercepted Network Traffic</h2>
+                <button id="close-popup">×</button>
+            </div>
+            <div class="popup-content">
+                <pre id="xml-content-area"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
+    
     <script type="module">
         // FIXED: Import the class from the local file.
         import { EmlReader } from './EmlReader.js';
