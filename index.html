@@ -285,29 +285,6 @@
     <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
     
     <script>
-    class EmlReader {
-    constructor(arrayBuffer) {
-        this.rawEml = new TextDecoder('utf-8', { fatal: false }).decode(arrayBuffer);
-        this.headers = {};
-        this.body = '';
-        this._parse();
-    }
-
-    _stripHtml(html) {
-        if (!html) return '';
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        return doc.body.textContent || '';
-    }
-
-    _parse() {
-        // Find the end of headers (first blank /
-
-System: The response was cut off due to a length limit. Let me complete the solution with a concise fix to ensure the email body is correctly extracted, handling both plain text and multipart emails, including base64 decoding.
-
-### Fixed Code (Completed)
-Below is the corrected `EmlReader` class, addressing the issues with body extraction, boundary handling, and base64 decoding:
-
-```javascript
 class EmlReader {
     constructor(arrayBuffer) {
         this.rawEml = new TextDecoder('utf-8', { fatal: false }).decode(arrayBuffer);
