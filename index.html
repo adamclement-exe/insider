@@ -284,7 +284,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="webodf.js" type="text/javascript" charset="utf-8"></script>
     
-    <!-- FIX: Replaced the previous EmlReader with a more robust, error-proof version -->
+    <!-- FIX: Final, robust version of the EML parser -->
     <script>
     class EmlReader {
         constructor(arrayBuffer) {
@@ -296,18 +296,15 @@
 
         _parse() {
             const headerEndIndex = this.rawEml.search(/\r?\n\r?\n/);
-
-            // Case 1: No headers found or file is empty. Treat entire content as body.
+            
             if (headerEndIndex === -1) {
                 this.body = this.rawEml;
                 return;
             }
 
-            // Case 2: Headers found.
             const headerBlock = this.rawEml.substring(0, headerEndIndex);
-            let bodyBlock = this.rawEml.substring(headerEndIndex + 4); // +4 to skip \r\n\r\n
+            let bodyBlock = this.rawEml.substring(headerEndIndex + 4); 
 
-            // Parse headers
             const headerLines = headerBlock.split(/\r?\n(?![ \t])/);
             headerLines.forEach(line => {
                 const separatorIndex = line.indexOf(':');
@@ -318,27 +315,25 @@
                 }
             });
             
-            this.body = bodyBlock; // Set a default body first.
-            const contentType = this.headers['content-type'] || ''; // Guarantees a string
+            this.body = bodyBlock; 
+            const contentType = this.headers['content-type'] || '';
 
-            // If multipart, find the correct text part.
             if (contentType.includes('multipart/')) {
                 const boundaryMatch = contentType.match(/boundary="?([^"]+)"?/i);
                 if (boundaryMatch) {
                     const boundary = boundaryMatch[1];
-                    const bodyParts = bodyBlock.split(new RegExp('--' + boundary + '(--)?'));
+                    const parts = bodyBlock.split(new RegExp(`--${boundary}(--)?`));
+                    
+                    const plainTextPart = parts.find(p => p && p.trim().toLowerCase().startsWith('content-type: text/plain'));
 
-                    for (const part of bodyParts) {
-                        if (part.toLowerCase().includes('content-type: text/plain')) {
-                            const contentMatch = part.match(/\r?\n\r?\n([\s\S]*)/);
-                            if (contentMatch && contentMatch[1]) {
-                                let text = contentMatch[1];
-                                if (part.toLowerCase().includes('content-transfer-encoding: quoted-printable')) {
-                                    text = text.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
-                                }
-                                this.body = text.trim();
-                                break;
+                    if (plainTextPart) {
+                        const contentMatch = plainTextPart.match(/\r?\n\r?\n([\s\S]*)/);
+                        if (contentMatch && typeof contentMatch[1] === 'string') {
+                            let messageBody = contentMatch[1];
+                            if (plainTextPart.toLowerCase().includes('content-transfer-encoding: quoted-printable')) {
+                                messageBody = messageBody.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
                             }
+                            this.body = messageBody;
                         }
                     }
                 }
