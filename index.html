@@ -540,7 +540,7 @@
                 const blob = await response.blob();
                 const file = new File([blob], 'commander.eml', { type: blob.type });
                 new EmlParser(file).parse((err, result) => {
-                    console.log(result);
+                    console.log(file);
                     if (err || !result) { document.getElementById('email-subject').textContent = 'Error loading email'; return; }
                     document.getElementById('email-subject').textContent = result.subject || '(No Subject)';
                     document.getElementById('email-from').textContent = result.from ? result.from.text : 'N/A';
