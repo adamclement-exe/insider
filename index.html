@@ -625,25 +625,57 @@ class EmlReader {
             mapFeedback.textContent = "Scan Area.";
         }
         mapSearchButton.addEventListener('click', performMapSearchL2);
+        
         async function performMapSearchL2() {
-            const query = mapSearchInput.value.trim(); if (!query) return;
-            mapFeedback.textContent = `Scanning...`;
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=gb`);
-            const data = await response.json();
-            if (data && data.length > 0) {
-                const loc = data[0]; const latLng = L.latLng(parseFloat(loc.lat), parseFloat(loc.lon));
-                if (userMarker) map.removeLayer(userMarker);
-                userMarker = L.marker(latLng).addTo(map).bindPopup(`<b>${loc.display_name}</b>`).openPopup();
-                map.setView(latLng, 10);
-                const target = L.latLng(+xorDecodeFromB64("WFBcQFtWRkRf","mars"), +xorDecodeFromB64("QFBcQlhSR0Zb","mars"));
-                      const dist = target.distanceTo(ll);
-                      if(dist <= 10*1609.34){
-                        document.getElementById('map-feedback').textContent = `Confirmed: ${loc.display_name}`;
-                        setTimeout(() => showActiveScreen('level3'), 2000);
+    const query = mapSearchInput.value.trim();
+    if (!query) return;
 
-                } else { mapFeedback.textContent = `Negative contact at "${loc.display_name}". Recalibrate.`; }
-            } else { mapFeedback.textContent = `Location not found.`; }
-        }
+    console.log("Level 2: searching for", query);
+    mapFeedback.textContent = `Scanning…`;
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${
+        encodeURIComponent(query)
+      }&limit=1&countrycodes=gb`
+    );
+    const data = await response.json();
+
+    if (!data || data.length === 0) {
+      mapFeedback.textContent = `Location not found.`;
+      return;
+    }
+
+    const loc = data[0];
+    const latLng = L.latLng(+loc.lat, +loc.lon);
+
+    // remove old marker
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.marker(latLng)
+      .addTo(map)
+      .bindPopup(`<b>${loc.display_name}</b>`)
+      .openPopup();
+
+    map.setView(latLng, 10);
+
+    // === Decode or hard-code your target coords ===
+    // Example hard-coded target:
+    const target = L.latLng(52.20472, 0.14056);
+    // If you really need XOR/Base64: 
+    // const targetLat = +xorDecodeFromB64("WFBcQFtWRkRf", "mars");
+    // const targetLng = +xorDecodeFromB64("QFBcQlhSR0Zb", "mars");
+    // const target = L.latLng(targetLat, targetLng);
+
+    // Measure distance from the found location
+    const dist = target.distanceTo(latLng);
+
+    if (dist <= 10 * 1609.34) {
+      mapFeedback.textContent = `Confirmed: ${loc.display_name}`;
+      setTimeout(() => showActiveScreen('level3'), 2000);
+    } else {
+      mapFeedback.textContent = `Negative contact at "${loc.display_name}". Recalibrate.`;
+    }
+}
+
         
         function startLevel3() { showActiveScreen('level3'); embedPDF(pdfViewerContainerL3, 'redacted.pdf'); }
         submitNameButtonL3.addEventListener('click', checkNameL3);
