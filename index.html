@@ -657,13 +657,10 @@ class EmlReader {
 
     map.setView(latLng, 10);
 
-    // === Decode or hard-code your target coords ===
-    // Example hard-coded target:
-    const target = L.latLng(52.20472, 0.14056);
-    // If you really need XOR/Base64: 
-    // const targetLat = +xorDecodeFromB64("WFBcQFtWRkRf", "mars");
-    // const targetLng = +xorDecodeFromB64("QFBcQlhSR0Zb", "mars");
-    // const target = L.latLng(targetLat, targetLng);
+
+     const targetLat = +xorDecodeFromB64("WFBcQFtWRkRf", "mars");
+     const targetLng = +xorDecodeFromB64("QFBcQlhSR0Zb", "mars");
+     const target = L.latLng(targetLat, targetLng);
 
     // Measure distance from the found location
     const dist = target.distanceTo(latLng);
